@@ -1,6 +1,14 @@
-### -------- Stationary test ---------
+rm(list=ls())
 
-Qtests <- function(series, k, fitdf=0) { #réalise le test de Ljung-Box pour les horizons jusqu'à 24 de la série "series" mise en argument
+source(file = "./data_import.R",local = TRUE)
+
+### ------- First plots ----------
+plot(spx.raw)
+plot(spx.ret)
+
+
+### -------- Stationary test ---------
+Qtests <- function(series, k, fitdf=0) { #réalise le test de Ljung-Box pour les k premiers horizons horizons la série "series" mise en argument
   pvals <- apply(matrix(1:k), 1, FUN=function(l) {
     pval <- if (l<=fitdf) NA else Box.test(series, lag=l, type="Ljung-Box", fitdf=fitdf)$p.value
     return(c("lag"=l,"pval"=pval))
@@ -14,12 +22,22 @@ exogeneisation_residus = function (series,specification){
     tab_p_val_autocorr = Qtests(my_adf@test$lm$residuals, 24, fitdf = length(my_adf@test$lm$coefficients))
     
     non_rejet = c((tab_p_val_autocorr[,2]> 0.05) | is.na(tab_p_val_autocorr[,2]))
-    if(sum(non_rejet)==24){ #test si tous les tests de Ljung-Box sont soit non rejetés, soit n'ont pas été réalisés car le lag était trop faible pour interprétation 
+    if(sum(non_rejet)==24){ #teste si tous les tests de Ljung-Box sont soit non rejetés, soit n'ont pas été réalisés car le lag était trop faible pour interprétation 
       return(lag)
     }
   }
-  return(paste0("Pas d'absence d'autocorrélation trouvé jusqu'à l'ajout du lag = ",lag_max))
+  return(paste0("Presence of  d'autocorrélation trouvé jusqu'à l'ajout du lag = ",lag_max))
 }
 
-lag_max = exogeneisation_residus(data.ret,"nc")
-fUnitRoots::adfTest(data.ret, lag=lag_max, type="nc") #p-value lower than 0.01 : we reject that the serie got an unit root
+lag_spx = exogeneisation_residus(spx.ret,"nc")
+fUnitRoots::adfTest(spx.ret, lag = lag_spx, type="nc") #p-value lower than 0.01 : we reject that the series got an unit root
+
+
+### ------- Focus on VIX -----------
+lag_vix = exogeneisation_residus(vix.ret$Price,"c")
+
+plot(vix.ret$Date, vix.ret$Price, type = "l")
+
+fUnitRoots::adfTest(vix.ret$Price, lag = lag_vix, type = "nc") #p_value lower than 0.01 -> vix series is stationary
+
+
