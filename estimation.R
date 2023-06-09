@@ -45,4 +45,3 @@ sum(is.na(df_2018$spx))
 df = df_spx %>% merge(df_Rvol22, by = "date") %>% filter(year(date) < 2019) %>% filter(1989 < year(date))
 GM_sp_Rvol22 = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
 round(GM_sp_Rvol22$par,4)
-
