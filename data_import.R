@@ -1,6 +1,9 @@
 library(tseries)
 library(dplyr)
 library(tidyr)
+library(zoo)
+
+# df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
 
 ###-------- S&P500 ---------
 # Automatic import of S&P500
@@ -13,14 +16,16 @@ df_spx = rename(df_spx, c("date"="Index", "spx" = "Close"))
 
 
 ###---- External variables ------
-transform_csv <- function(data){ #transforms the csv file of YahooFinance
-  data = select(data, "Close","Date")
-  data = rename(data, c("Price" = "Close"))
-  data$Price = as.numeric(data$Price)
-  data$Date = as.Date(data$Date)
-  data = drop_na(data)
-  return(data[-1,])
-}
+
+# RV
+#download.file("https://realized.oxford-man.ox.ac.uk/images/oxfordmanrealizedvolatilityindices.zip", destfile = "data-raw/OxfordManRealizedVolatilityIndices.zip")
+#system("unzip -o data-raw/OxfordManRealizedVolatilityIndices.zip -d data-raw/")
+
+# Daily measures of financial risk
+
+### RVol(22)
+Rvol22 = zoo::rollmean(spx.ret**2, 22, align = "right") #the current value and the past 21 values are taken for the mean
+df_Rvol22 = Rvol22 %>% fortify.zoo() %>%  drop_na() %>% rename(c("date" = "Index", Rvol22= "Close"))
 
 
 ### vix
@@ -29,13 +34,13 @@ sum(is.na(vix.raw$Close)) #numbers of NA 1990 to 09/06/2023 : 299
 
 df_vix = fortify.zoo(vix.raw)
 df_vix = df_vix  %>% drop_na()
-df_vix = mutate(df_vix,vix_dailyscaled = Close/252**(1/2)) # vix which has been transformed at a daily scale
+df_vix = mutate(df_vix,vix_dailyscaled = Close/252**(1/2)) # vix which has been converted to a daily level
 df_vix = df_vix %>% rename(c("date" = "Index", "vix" = "vix_dailyscaled")) %>% select(c("date","vix"))
 
 
-# RV
-#download.file("https://realized.oxford-man.ox.ac.uk/images/oxfordmanrealizedvolatilityindices.zip", destfile = "data-raw/OxfordManRealizedVolatilityIndices.zip")
-#system("unzip -o data-raw/OxfordManRealizedVolatilityIndices.zip -d data-raw/")
+### VRP (variance risk premium)
+vrp = vix.raw/ 252**(1/2) - Rvol22
+df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp = "Close"))
 
 
 # library(alfred)
