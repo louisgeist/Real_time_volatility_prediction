@@ -20,13 +20,6 @@ plot(model@fit[["sigma"]], type="l", ylab = "Sigma")
 
 ### ----- GARCH-MIDAS --------
 ## Construction of the unique dataframe containing all the used data
-
-# spx
-df_spx = fortify.zoo(spx.ret)
-df_spx = rename(df_spx, c("date"="Index", "spx" = "Close"))
-# vix
-df_vix = rename(as.data.frame(vix.ret),c("date"="Date","vix" = "Price"))
-# final dataframe
 df = merge(df_spx, df_vix, by = "date")
 
 results = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "vix", K = 3, low.freq = "date", weighting = "beta.restricted")
@@ -36,3 +29,5 @@ df_2018 = filter(df, year(date) < 2019)
 
 results_2018 = mfGARCH::fit_mfgarch(data = df_2018, y = "spx", x = "vix", K = 3, low.freq = "date", weighting = "beta.restricted")
 round(results_2018$par,4)
+
+sum(is.na(df_2018$spx))
