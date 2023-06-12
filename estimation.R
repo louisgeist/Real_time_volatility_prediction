@@ -26,15 +26,15 @@ GM_sp_vix = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "vix", K = 3, low.fre
 
 ## s&p explained by Rvol22
 df = merge(df_spx, df_Rvol22, by = "date")
-GP_sp_rvol22 = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
+GM_sp_Rvol22 = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
 
 ## s&p explained by vrp
 df = merge(df_spx, df_vrp, by = "date")
-GP_sp_vrp = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "vrp", K = 3, low.freq = "date", weighting = "beta.restricted")
+GM_sp_vrp = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "vrp", K = 3, low.freq = "date", weighting = "beta.restricted")
 
 
 # Focus on period 1990 - 2018 (as in the paper)
-df_2018 = filter(df, year(date) < 2019)
+df_2018 = df_spx %>% merge(df_vix, by = "date") %>% filter(year(date) < 2019)
 
 results_2018 = mfGARCH::fit_mfgarch(data = df_2018, y = "spx", x = "vix", K = 3, low.freq = "date", weighting = "beta.restricted")
 round(results_2018$par,4)
@@ -43,5 +43,6 @@ sum(is.na(df_2018$spx))
 
 # Rvol(22)
 df = df_spx %>% merge(df_Rvol22, by = "date") %>% filter(year(date) < 2019) %>% filter(1989 < year(date))
-GM_sp_Rvol22 = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
-round(GM_sp_Rvol22$par,4)
+GM_sp_Rvol22_restriced_period = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
+round(GM_sp_Rvol22_restriced_period$par,4)
+
