@@ -16,7 +16,6 @@ df_spx = rename(df_spx, c("date"="Index", "spx" = "Close"))
 
 
 ###---- External variables ------
-
 # RV
 #download.file("https://realized.oxford-man.ox.ac.uk/images/oxfordmanrealizedvolatilityindices.zip", destfile = "data-raw/OxfordManRealizedVolatilityIndices.zip")
 #system("unzip -o data-raw/OxfordManRealizedVolatilityIndices.zip -d data-raw/")
