@@ -3,7 +3,12 @@ library(dplyr)
 library(tidyr)
 library(zoo)
 
+
+#-----------------
 # df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
+#-----------------
+
+
 
 ###-------- S&P500 ---------
 # Automatic import of S&P500
@@ -45,5 +50,23 @@ df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp 
 # library(alfred)
 # nfci = get_alfred_series("NFCI")
 # rv = get_alfred_series("RV")
+
+
+
+# Non daily measures
+
+#In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date
+
+
+day_begin = dmy("01-06-2023")
+day_end = dmy("01-07-2023")
+#script of the function to be written
+
+
+t = seq(day_begin, day_end, by = "days")
+
+# housing starts
+HOUST = read.csv("./data/HOUST_1206.csv")
+partial_df_dhoust = HOUST %>% rename(c("date" = "DATE","dhoust"="HOUST"))
 
 

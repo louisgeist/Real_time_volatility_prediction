@@ -46,3 +46,5 @@ df = df_spx %>% merge(df_Rvol22, by = "date") %>% filter(year(date) < 2019) %>% 
 GM_sp_Rvol22_restriced_period = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
 round(GM_sp_Rvol22_restriced_period$par,4)
 
+
+### Non daily explanatory variable
