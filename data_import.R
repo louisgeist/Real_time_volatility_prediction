@@ -55,18 +55,41 @@ df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp 
 
 # Non daily measures
 
-#In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date
+#In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date ; 
+#fill_missing_dates() solves this problem
+fill_missing_dates = function(partial_df){
+  list_day = seq(ymd(partial_df$date[[1]]),today(),by = "days") # saturday and sunday are in excess, causing only a slower script
+  list_value = double(length(list_day))
+  
+  i = 1 # index going through partial_df
+  
+  for(day_index in 1:length(list_day)){
+    day_floor = floor_date(list_day[[day_index]],unit = "month")
+    
+    if(ymd(partial_df$date[[i]]) == day_floor){
+      list_value[[day_index]] = partial_df$dhoust[[i]]
+    }
+    else{
+      i = i + 1
+      if(i == length(partial_df$dhoust)){
+        break
+      }
+      if(ymd(partial_df$date[[i]]) == day_floor){
+        list_value[[day_index]] = partial_df$dhoust[[i]]
+      }
+      else{print("error")}
+    }
+  }
+  df = as.data.frame(cbind(list_day,list_value)) %>% mutate(date = as_date(list_day)) %>% select(-c(list_day))
+  return(df)
+}
 
-
-day_begin = dmy("01-06-2023")
-day_end = dmy("01-07-2023")
-#script of the function to be written
-
-
-t = seq(day_begin, day_end, by = "days")
 
 # housing starts
 HOUST = read.csv("./data/HOUST_1206.csv")
 partial_df_dhoust = HOUST %>% rename(c("date" = "DATE","dhoust"="HOUST"))
 
 
+
+t = fill_missing_dates(partial_df_dhoust)
+t = t 
