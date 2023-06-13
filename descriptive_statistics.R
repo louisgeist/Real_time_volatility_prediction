@@ -1,3 +1,4 @@
+library(ggplot2)
 rm(list=ls())
 
 source(file = "./data_import.R",local = TRUE)
@@ -5,7 +6,6 @@ source(file = "./data_import.R",local = TRUE)
 ### ------- First plots ----------
 plot(spx.raw)
 plot(spx.ret)
-
 
 ### -------- Stationary test ---------
 Qtests <- function(series, k, fitdf=0) { #réalise le test de Ljung-Box pour les k premiers horizons horizons la série "series" mise en argument
@@ -40,4 +40,18 @@ plot(vix.ret$Date, vix.ret$Price, type = "l")
 
 fUnitRoots::adfTest(vix.ret$Price, lag = lag_vix, type = "nc") #p_value lower than 0.01 -> vix series is stationary
 
+### ------- House startings ----------
+# Non diff series
 
+lag_houst = exogeneisation_residus(HOUST$HOUST, "c")
+fUnitRoots::adfTest(HOUST$HOUST, lag = lag_houst, type ="c")
+
+# HOUST est stationnaire, mais on prend quand même la différence ! (selon ADF)
+kpss.test(HOUST$HOUST, null = c("Level"), lshort = TRUE) #p-value lower than 0.01
+kpss.test(HOUST$HOUST, null = c("Level"), lshort = FALSE) #p-value 0.039
+
+# dhoust
+ggplot(df_dhoust) + geom_line(aes(x = date, y = dhoust))
+
+lag_dhoust = exogeneisation_residus(df_dhoust$dhoust, "nc")
+fUnitRoots::adfTest(df_dhoust$dhoust, lag = lag_houst, type ="nc") #p-value lower than 1 -> stationary

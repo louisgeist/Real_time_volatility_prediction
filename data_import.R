@@ -3,14 +3,9 @@ library(dplyr)
 library(tidyr)
 library(zoo)
 
+# NB : df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
 
-#-----------------
-# df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
-#-----------------
-
-
-
-###-------- S&P500 ---------
+#-------- S&P500 ---------
 # Automatic import of S&P500
 
 spx.raw <- get.hist.quote(instrument = "^GSPC", start=as.Date("1971-01-01"), quote="Close")
@@ -20,12 +15,12 @@ df_spx = fortify.zoo(spx.ret)
 df_spx = rename(df_spx, c("date"="Index", "spx" = "Close"))
 
 
-###---- External variables ------
+#---- External variables ------
 # RV
 #download.file("https://realized.oxford-man.ox.ac.uk/images/oxfordmanrealizedvolatilityindices.zip", destfile = "data-raw/OxfordManRealizedVolatilityIndices.zip")
 #system("unzip -o data-raw/OxfordManRealizedVolatilityIndices.zip -d data-raw/")
 
-# Daily measures of financial risk
+## ----- Daily measures of financial risk -----
 
 ### RVol(22)
 Rvol22 = zoo::rollmean(spx.ret**2, 22, align = "right") #the current value and the past 21 values are taken for the mean
@@ -52,44 +47,72 @@ df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp 
 # rv = get_alfred_series("RV")
 
 
-
-# Non daily measures
+## ---- Non daily measures ----
 
 #In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date ; 
 #fill_missing_dates() solves this problem
-fill_missing_dates = function(partial_df){
-  list_day = seq(ymd(partial_df$date[[1]]),today(),by = "days") # saturday and sunday are in excess, causing only a slower script
-  list_value = double(length(list_day))
+fill_missing_dates = function(partial_df, frequency = "month", week_start = F){# partial_df must have two columns : "date" & "value" need to be in the partial_df
+  # if frequency = "month", then week_start needs an integer between 1 and 7 that indicates the day of the week to which we round (1 is monday)
+
+  list_day = seq(ymd(partial_df$date[[1]]),today(), by = "days") # saturday and sunday are in excess, causing only a slower script
+  list_value = rep(NA,times = length(list_day))
   
   i = 1 # index going through partial_df
   
   for(day_index in 1:length(list_day)){
-    day_floor = floor_date(list_day[[day_index]],unit = "month")
+    day_floor = floor_date(list_day[[day_index]], unit = frequency, week_start)
     
     if(ymd(partial_df$date[[i]]) == day_floor){
-      list_value[[day_index]] = partial_df$dhoust[[i]]
+      list_value[[day_index]] = partial_df$value[[i]]
     }
     else{
       i = i + 1
-      if(i == length(partial_df$dhoust)){
+      if(i == length(partial_df$value)){
         break
       }
       if(ymd(partial_df$date[[i]]) == day_floor){
-        list_value[[day_index]] = partial_df$dhoust[[i]]
+        list_value[[day_index]] = partial_df$value[[i]]
       }
       else{print("error")}
     }
   }
-  df = as.data.frame(cbind(list_day,list_value)) %>% mutate(date = as_date(list_day)) %>% select(-c(list_day))
+  df = as.data.frame(cbind(list_day,list_value)) %>% mutate(date = as_date(list_day)) %>% select(-c(list_day)) %>% drop_na() %>% rename(c("value" = "list_value"))
   return(df)
 }
 
 
-# housing starts
-HOUST = read.csv("./data/HOUST_1206.csv")
-partial_df_dhoust = HOUST %>% rename(c("date" = "DATE","dhoust"="HOUST"))
+### housing starts
+HOUST = read.csv("./data/HOUST_1206.csv") %>% rename(c("date" = "DATE"))
+partial_df_dhoust = HOUST %>% mutate(value = c(NA,100*diff(log(HOUST))))
+df_dhoust = fill_missing_dates(partial_df_dhoust, frequency = "month")
+
+library(ggplot2)
+p = ggplot(df_dhoust) + geom_line(aes(x = date, y = value))
+p
+
+### industrial production (ip)
+IP = read.csv("./data/IP_120623.csv")
+#partial_df_ip = HOUST %>% rename(c("date" = "DATE", "dhoust" = "HOUST"))
+#df_dhoust = fill_missing_dates(partial_df_dhoust) %>% rename(c("dhoust" = "list_value"))
+
+
+### nai
+nai = read.csv("./data/nai_120623.csv", sep = ";") %>% 
+  select(c("Date","CFNAI")) %>%
+  mutate(date = ym(Date),value = as.numeric(sub(",", ".", CFNAI, fixed = TRUE))) %>% 
+  select(-c("Date",CFNAI))
+
+df_nai = fill_missing_dates(nai, frequency = "month")
+
+ggplot(nai) + geom_line(aes(x = date, y = value))
+
+### nfci
+NFCI = read.csv("./data/nfci_120623.csv") %>%
+  mutate(date = mdy(Friday_of_Week)) %>%
+  select(c("date", "NFCI")) %>%
+  rename(c("value" = "NFCI"))
+
+df_NFCI = fill_missing_dates(NFCI, frequency = "week", week_start = 5)
 
 
 
-t = fill_missing_dates(partial_df_dhoust)
-t = t 

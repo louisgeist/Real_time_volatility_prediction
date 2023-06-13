@@ -10,7 +10,7 @@ rm(list=ls())
 source(file = "./data_import.R")
 
 
-###----- fit of normal GARCH ---------
+### ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1, 1)), mean.model = list(include.mean=FALSE), distribution.model = "norm")
 model = ugarchfit(spec_garch, spx.ret)
 model
@@ -45,6 +45,5 @@ sum(is.na(df_2018$spx))
 df = df_spx %>% merge(df_Rvol22, by = "date") %>% filter(year(date) < 2019) %>% filter(1989 < year(date))
 GM_sp_Rvol22_restriced_period = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "Rvol22", K = 264, low.freq = "date", weighting = "beta.restricted")
 round(GM_sp_Rvol22_restriced_period$par,4)
-
 
 ### Non daily explanatory variable
