@@ -2,6 +2,7 @@ library(tseries)
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(lubridate)
 
 # NB : df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
 
@@ -52,7 +53,7 @@ df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp 
 #In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date ; 
 #fill_missing_dates() solves this problem
 fill_missing_dates = function(partial_df, frequency = "month", week_start = F){# partial_df must have two columns : "date" & "value" need to be in the partial_df
-  # if frequency = "month", then week_start needs an integer between 1 and 7 that indicates the day of the week to which we round (1 is monday)
+  # if frequency = "week", then week_start needs an integer between 1 and 7 (Monday based)
 
   list_day = seq(ymd(partial_df$date[[1]]),today(), by = "days") # saturday and sunday are in excess, causing only a slower script
   list_value = rep(NA,times = length(list_day))
@@ -60,7 +61,13 @@ fill_missing_dates = function(partial_df, frequency = "month", week_start = F){#
   i = 1 # index going through partial_df
   
   for(day_index in 1:length(list_day)){
-    day_floor = floor_date(list_day[[day_index]], unit = frequency, week_start)
+    if(frequency == "week"){
+      day_floor = floor_date(list_day[[day_index]], unit = frequency, week_start)
+    }
+    else{# frequency = "month"
+      day_floor = floor_date(list_day[[day_index]], unit = frequency)
+    }
+    
     
     if(ymd(partial_df$date[[i]]) == day_floor){
       list_value[[day_index]] = partial_df$value[[i]]
@@ -76,14 +83,31 @@ fill_missing_dates = function(partial_df, frequency = "month", week_start = F){#
       else{print("error")}
     }
   }
-  df = as.data.frame(cbind(list_day,list_value)) %>% mutate(date = as_date(list_day)) %>% select(-c(list_day)) %>% drop_na() %>% rename(c("value" = "list_value"))
+  
+  
+  
+  df = as.data.frame(cbind(list_day,list_value)) %>% 
+    mutate(date = as_date(list_day)) %>% 
+    select(-c(list_day)) %>% 
+    drop_na() %>% 
+    rename(c("value" = "list_value"))
+  
+  
+  # computation of low.freq variable for the "fit_mfGARCH" function
+  if(frequency == "week"){
+    df = df %>% mutate(year_week = floor_date(date, unit = frequency, week_start) )
+  }
+  else{
+    df = df %>% mutate(year_month = floor_date(date, unit = frequency) )
+  }
+  
   return(df)
 }
 
 
 ### housing starts
 HOUST = read.csv("./data/HOUST_1206.csv") %>% rename(c("date" = "DATE"))
-partial_df_dhoust = HOUST %>% mutate(value = c(NA,100*diff(log(HOUST))))
+partial_df_dhoust = HOUST %>% mutate(value = c(NA, 100*diff(log(HOUST))))
 df_dhoust = fill_missing_dates(partial_df_dhoust, frequency = "month")
 
 library(ggplot2)
@@ -113,6 +137,3 @@ NFCI = read.csv("./data/nfci_120623.csv") %>%
   rename(c("value" = "NFCI"))
 
 df_NFCI = fill_missing_dates(NFCI, frequency = "week", week_start = 5)
-
-
-

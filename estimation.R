@@ -47,3 +47,9 @@ GM_sp_Rvol22_restriced_period = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "
 round(GM_sp_Rvol22_restriced_period$par,4)
 
 ### Non daily explanatory variable
+df = df_spx %>% merge(df_dhoust, by = "date")
+GM_dhoust = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "value", low.freq = "year_month", K =  36, weighting = "beta.unrestricted")
+
+df = df_spx %>% merge(df_NFCI, by = "date")
+GM_nfci = mfGARCH::fit_mfgarch(data = df, y = "spx", x = "value", low.freq = "year_week", K =  52, weighting = "beta.restricted")
+GM_nfci$week_start <- 5 # should be the same as indicated in data_import.R
