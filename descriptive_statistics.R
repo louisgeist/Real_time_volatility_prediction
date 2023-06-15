@@ -3,11 +3,15 @@ rm(list=ls())
 
 source(file = "./data_import.R",local = TRUE)
 
-### ------- First plots ----------
+## ------- First plots ----------
 plot(spx.raw)
 plot(spx.ret)
 
-### -------- Stationary test ---------
+## -------- Stationary test ---------
+# Remark : 
+# - the series we are fitting should be stationary
+# - the long-term component should also be stationary
+
 Qtests <- function(series, k, fitdf=0) { #réalise le test de Ljung-Box pour les k premiers horizons horizons la série "series" mise en argument
   pvals <- apply(matrix(1:k), 1, FUN=function(l) {
     pval <- if (l<=fitdf) NA else Box.test(series, lag=l, type="Ljung-Box", fitdf=fitdf)$p.value
