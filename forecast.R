@@ -1,45 +1,52 @@
-### ----- Forecast with a GARCH-MIDAS ------
-# what follows relies on the "mfGARCH" package
+# ----- Forecast with a GARCH-MIDAS ------
+# forecast function rely on the "mfGARCH" package
 library(timeDate)
+library(plyr)
 
-next_g_func <- function(alpha,beta,gamma,epsilon,tau,g){
-  return((1-alpha-gamma/2-beta) + (alpha + gamma * as.numeric(epsilon < 0))*(epsilon**2)/tau + beta*g)
+## ----- general useful function for forecast -----
+next_g_func <- function(alpha, beta, gamma, epsilon, tau, g) {
+  return((1 - alpha - gamma / 2 - beta) + (alpha + gamma * as.numeric(epsilon < 0)) *
+           (epsilon ** 2) / tau + beta * g)
 }
 
-seq_quotation_date = function(initial_date,h){ #returns h+1 next quoted days after the initial date
+seq_quotation_date = function(initial_date, h) {
+  #returns h+1 next quoted days after the initial date
   # initial_date : date
   # h : integer, for the horizon
   
-  list_days = seq(initial_date, initial_date + 2*h+5, by = "day")
+  list_days = seq(initial_date, initial_date + 2 * h + 5, by = "day")
   
-  unique_years = year(list_days) %>% as.data.frame() %>% rename(c("year" = "."))%>% distinct(year)
+  unique_years = lubridate::year(list_days) %>% as.data.frame() %>% dplyr::rename(c("year" = ".")) %>% distinct(year)
   holiday = c()
-  for(y in unique_years$year){
+  for (y in unique_years$year) {
     holiday = c(holiday, ymd(holidayNYSE(year = y)))
   }
   
   quoted_days = c()
-  for(date in list_days){
-    if((wday(as_date(date)) %in% seq(2,6))& (1 -(date %in% holiday)) ){
-      quoted_days[c(length(quoted_days)+ 1)] = date
+  for (date in list_days) {
+    if ((wday(as_date(date)) %in% seq(2, 6)) &
+        (1 - (date %in% holiday))) {
+      quoted_days[c(length(quoted_days) + 1)] = date
       
     }
   }
   
   quoted_days = quoted_days %>% as_date()
-  return(quoted_days[c(seq(1:(h+1)))])
+  return(quoted_days[c(seq(1:(h + 1)))])
 }
 
+## ----- bootstrap forecast -----
+
 # Simulation of a GARCH-MIDAS. No hypothesis on the innovation's law : bootstrap
-simulate_garchmidas <- function(x, h){
+simulate_garchmidas <- function(x, h) {
   # x is a mfGARCH object obtained by fit_mfgarch
   # h is the horizon of simulation
-
+  
   # Build of the boostrap set for the innovations
-  df_spx = x$df.fitted %>% select(c("date","spx"))
+  df_spx = x$df.fitted %>% select(c("date", "spx"))
   df_epsilon = df_spx %>% mutate(epsilon = spx - x$par[[1]]) %>% select(-c("spx"))
   
-  df_resi_g_tau = x$df.fitted %>% select(c("date","g","tau","residuals")) %>% drop_na()
+  df_resi_g_tau = x$df.fitted %>% select(c("date", "g", "tau", "residuals")) %>% drop_na()
   
   alpha = x$par["alpha"][[1]]
   beta = x$par["beta"][[1]]
@@ -53,14 +60,14 @@ simulate_garchmidas <- function(x, h){
   # computation of TAU
   list_tau = rep(x$tau.forecast, times = h)
   
-  # (this section of the code is written for long-term component that are avaible before the end of period : if tau_t is avaible before the end of the period t)
+  # (this section of the code is written especially for long-term component that are avaible before the end of period : if tau_t is avaible before the end of the period t)
   # (but I think that this never occurs)
   # list_tau = double(h)
   # low.freq = names(x$df.fitted)[[3]]
-  # 
+  #
   # quoted_days = seq_quotation_date(x$df.fitted$date[c(length(x$df.fitted$date))], h)[-c(1)]
   # current_tau = x$tau[[length(x$tau)]]
-  # 
+  #
   # if(low.freq == "year_month"){
   #   current_lowfreq = x$df.fitted$year_month[[length(x$df.fitted$year_month)]]
   #   for(i in 1:h){
@@ -83,7 +90,7 @@ simulate_garchmidas <- function(x, h){
   #         list_tau[[i]] = x$tau.forecast
   #       }
   #     }
-  #     
+  #
   #   }
   #   else{# means that it is a daily long term component
   #     list_tau = rep(x$tau.forecast, times = h)
@@ -94,87 +101,161 @@ simulate_garchmidas <- function(x, h){
   list_g = double(h)
   list_epsilon = double(h)
   
-  for(i in 1:h){ 
+  for (i in 1:h) {
     # previous : i-1
     # next (that we want to predict): i
     
-    if(i == 1){
+    if (i == 1) {
       previous_g = df_resi_g_tau$g[c(length(df_resi_g_tau$tau))]
       previous_epsilon = df_epsilon$epsilon[c(length(df_epsilon$epsilon))]
     }
     else{
-      previous_g = list_g[i-1]
-      previous_epsilon = list_epsilon[i-1]
+      previous_g = list_g[i - 1]
+      previous_epsilon = list_epsilon[i - 1]
     }
     
-    list_g[i] = next_g_func(alpha, beta, gamma, epsilon = previous_epsilon, tau = list_tau[i], g = previous_g)
+    list_g[i] = next_g_func(alpha,
+                            beta,
+                            gamma,
+                            epsilon = previous_epsilon,
+                            tau = list_tau[i],
+                            g = previous_g)
     list_epsilon[i] = list_residuals[i][[1]] * sqrt(list_g[i] * list_tau[i]) # WARNING : check the indexes
     
   }
   
-
+  
   # date = c()
   # for(i in 0:h){
   #   th = as.character(quoted_days[i])
   #   print(th)
   #   date[i] = th
   # }
-    
-  df_forecast = as.data.frame( cbind( list_epsilon, list_g, list_tau, list_residuals)) %>% rename(c("epsilon" = "list_epsilon", #date, 
-                                                                                               "g" = "list_g", 
-                                                                                               "tau" = "list_tau", 
-                                                                                               "residuals" = "list_residuals"))
+  
+  df_forecast = as.data.frame(cbind(list_epsilon, list_g, list_tau, list_residuals)) %>% rename(
+    c(
+      "epsilon" = "list_epsilon",
+      #date,
+      "g" = "list_g",
+      "tau" = "list_tau",
+      "residuals" = "list_residuals"
+    )
+  )
   return(df_forecast)
 }
 
 # it is faster to use "optimal_forecast" and the results seem to be equivalent
-bootstrap_forecast <- function(x,h){
+bootstrap_forecast <- function(x, h) {
   n = 1000
   res = 0
   
-  for(i in 1:n){
+  for (i in 1:n) {
     # res = res + simulate_garchmidas(x,h)$epsilon[[h]]**2 / simulate_garchmidas(x,h)$residuals[[h]]**2
-    res = res + simulate_garchmidas(x,h)$tau[[h]] * simulate_garchmidas(x,h)$g[[h]]
+    res = res + simulate_garchmidas(x, h)$tau[[h]] * simulate_garchmidas(x, h)$g[[h]]
   }
   
-  return(res/n)
+  
+  
+  return(res / n)
 }
 
-optimal_forecast <- function(x,h){
-  # x is a mfGARCH object obtained by fit_mfgarch
-  # h is the horizon of forecast
-  
+## ---- optimal forecast ----
+point_optimal_forecast <-
+  function(x, h) {
+    # the optimal forecast is only given for the h^th day ahead.
+    # x is a mfGARCH object obtained by fit_mfgarch
+    # h is the horizon of forecast
+    
+    alpha = x$par["alpha"][[1]]
+    beta = x$par["beta"][[1]]
+    gamma = x$par["gamma"][[1]]
+    
+    last_g = x$g[c(length(x$g))]
+    last_epsilon = x$df.fitted$spx[[length(x$df.fitted$spx)]]
+    last_tau = x$tau[[length(x$tau)]]
+    
+    next_g = next_g_func(alpha, beta, gamma, last_epsilon, last_tau, last_g) # g_1,t+1|t
+    
+    opt_forecast = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (h -
+                                                                          1) * (next_g - 1))
+    
+    return(opt_forecast)
+  }
+
+series_optimal_forecast <- function(x, h) {
   alpha = x$par["alpha"][[1]]
   beta = x$par["beta"][[1]]
   gamma = x$par["gamma"][[1]]
   
-  last_g = x$g[c(length(x$g))]
+  last_g = x$g[[length(x$g)]]
   last_epsilon = x$df.fitted$spx[[length(x$df.fitted$spx)]]
   last_tau = x$tau[[length(x$tau)]]
   
-  next_g = next_g_func(alpha, beta, gamma, last_epsilon, last_tau, last_g) # g_1,t+1|t
+  quoted_days = seq_quotation_date(x$df.fitted$date[[length(x$df.fitted$date)]], h)[-c(1)]
   
-  opt_forecast = x$tau.forecast*(1 + (alpha + gamma/2 + beta)**(h-1) * (next_g - 1))
-
-  return(opt_forecast)
+  forecast_list = 1:h
+  
+  df = adply(
+    forecast_list,
+    .margins = c(1),
+    .fun = function(h)
+      point_optimal_forecast(x, h)
+  ) %>% dplyr::rename(c("optimal_prediction" = "V1")) %>%
+    mutate(horizon = as.numeric(X1)) %>% 
+    select(c("horizon","optimal_prediction"))
+  
+  tib = as_tibble(df)
+  tib$date = quoted_days
+  
+  return(tib)
+  
 }
+
 
 # test of the functions
 h = 20
 
-res = simulate_garchmidas(GM_dhoust, h)
-res
+x = GM_dhoust
+test = series_optimal_forecast(GM_dhoust,h)
+test
 
-plot(1:h, res$epsilon, type= "l")
-plot(1:h, res$residuals, type= "l")
-plot(1:h, res$g, type= "l")
+# display
+ggplot(data = test) + geom_line(aes(x = horizon, y = optimal_prediction))
+ggplot(data = test) + geom_line(aes(x = date, y = optimal_prediction))
 
-simulate_garchmidas(GM_nfci, 20)
+# bug in display with ggplot2, because the columns of my df are not double, but lists of length 1
+# library(ggplot2)
+# res = simulate_garchmidas(GM_dhoust, h)
+# res
+# 
+# res_tibble = res %>% 
+#   as_tibble()
+# 
+# res_tibble
+#  
+# res_tibble = res_tibble %>%
+#  tibble::rownames_to_column(var = "horizon_car") %>%
+#  mutate(horizon = as.numeric(horizon_car)) %>% 
+#  mutate(epsilon = list_epsilon[[1]], g = list_g[[1]], tau = list_tau[[1]], residuals = list_residuals[[1]]) %>%
+#  select(c("horizon","epsilon", "g", "residuals","tau"))
+# 
+# res_tibble
+# 
+# res$list_epsilon
+# 
+# p = ggplot(res_tibble) + geom_line(aes(x = horizon, y = g))
+# p
 
-optimal_forecast(GM_nfci,100)
+plot(1:h, res$list_epsilon, type = "l")
+plot(1:h, res$list_residuals, type = "o")
+plot(1:h, res$list_g, type = "l")
+
+
+
+# simulate_garchmidas(GM_nfci, 20)
+#
+# optimal_forecast(GM_nfci,100)
 
 ### Smoothness of tau ?
 # plot = ggplot(data = df_resi_g_tau)+geom_line((aes(x = date, y = tau)))
 # plot
-
-
