@@ -106,21 +106,21 @@ simulate_garchmidas <- function(x, h) {
     # next (that we want to predict): i
     
     if (i == 1) {
-      previous_g = df_resi_g_tau$g[c(length(df_resi_g_tau$tau))]
-      previous_epsilon = df_epsilon$epsilon[c(length(df_epsilon$epsilon))]
+      previous_g = df_resi_g_tau$g[[length(df_resi_g_tau$tau)]]
+      previous_epsilon = df_epsilon$epsilon[[length(df_epsilon$epsilon)]]
     }
     else{
-      previous_g = list_g[i - 1]
-      previous_epsilon = list_epsilon[i - 1]
+      previous_g = list_g[[i - 1]]
+      previous_epsilon = list_epsilon[[i - 1]]
     }
     
-    list_g[i] = next_g_func(alpha,
+    list_g[[i]] = next_g_func(alpha,
                             beta,
                             gamma,
                             epsilon = previous_epsilon,
                             tau = list_tau[i],
                             g = previous_g)
-    list_epsilon[i] = list_residuals[i][[1]] * sqrt(list_g[i] * list_tau[i]) # WARNING : check the indexes
+    list_epsilon[[i]] = list_residuals[i][[1]] * sqrt(list_g[i][[1]] * list_tau[i][[1]])
     
   }
   
@@ -132,7 +132,8 @@ simulate_garchmidas <- function(x, h) {
   #   date[i] = th
   # }
   
-  df_forecast = as.data.frame(cbind(list_epsilon, list_g, list_tau, list_residuals)) %>% rename(
+  print(list_epsilon)
+  df_simulation = as_tibble(as.data.frame(cbind(list_epsilon, list_g, list_tau, list_residuals))) %>% dplyr::rename(
     c(
       "epsilon" = "list_epsilon",
       #date,
@@ -141,7 +142,7 @@ simulate_garchmidas <- function(x, h) {
       "residuals" = "list_residuals"
     )
   )
-  return(df_forecast)
+  return(df_simulation)
 }
 
 # it is faster to use "optimal_forecast" and the results seem to be equivalent
@@ -153,13 +154,12 @@ bootstrap_forecast <- function(x, h) {
     # res = res + simulate_garchmidas(x,h)$epsilon[[h]]**2 / simulate_garchmidas(x,h)$residuals[[h]]**2
     res = res + simulate_garchmidas(x, h)$tau[[h]] * simulate_garchmidas(x, h)$g[[h]]
   }
-  
-  
-  
+
   return(res / n)
 }
 
-## ---- optimal forecast ----
+## ----- optimal forecast ----
+
 point_optimal_forecast <-
   function(x, h) {
     # the optimal forecast is only given for the h^th day ahead.
@@ -212,22 +212,15 @@ series_optimal_forecast <- function(x, h) {
 }
 
 
-# test of the functions
-h = 20
 
-x = GM_dhoust
-test = series_optimal_forecast(GM_dhoust,h)
-test
-
-# display
-ggplot(data = test) + geom_line(aes(x = horizon, y = optimal_prediction))
-ggplot(data = test) + geom_line(aes(x = date, y = optimal_prediction))
+## ----- use of functions ------
 
 # bug in display with ggplot2, because the columns of my df are not double, but lists of length 1
 # library(ggplot2)
+
 # res = simulate_garchmidas(GM_dhoust, h)
 # res
-# 
+
 # res_tibble = res %>% 
 #   as_tibble()
 # 
@@ -246,15 +239,8 @@ ggplot(data = test) + geom_line(aes(x = date, y = optimal_prediction))
 # p = ggplot(res_tibble) + geom_line(aes(x = horizon, y = g))
 # p
 
-plot(1:h, res$list_epsilon, type = "l")
-plot(1:h, res$list_residuals, type = "o")
-plot(1:h, res$list_g, type = "l")
 
 
-
-# simulate_garchmidas(GM_nfci, 20)
-#
-# optimal_forecast(GM_nfci,100)
 
 ### Smoothness of tau ?
 # plot = ggplot(data = df_resi_g_tau)+geom_line((aes(x = date, y = tau)))

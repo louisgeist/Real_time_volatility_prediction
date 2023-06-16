@@ -6,9 +6,6 @@ library(fUnitRoots)
 library(mfGARCH)
 library(lubridate)
 
-rm(list = ls())
-source(file = "./data_import.R")
-
 
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(

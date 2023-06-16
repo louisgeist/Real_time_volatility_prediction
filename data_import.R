@@ -48,14 +48,14 @@ df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", vrp 
 # rv = get_alfred_series("RV")
 
 
-## ---- Non daily measures ----
+## ----- Non daily measures ----
 
 #In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date ; 
 #fill_missing_dates() solves this problem
 fill_missing_dates = function(partial_df, frequency = "month", week_start = F){# partial_df must have two columns : "date" & "value" need to be in the partial_df
   # if frequency = "week", then week_start needs an integer between 1 and 7 (Monday based)
 
-  list_day = seq(ymd(partial_df$date[[1]]),today(), by = "days") # saturday and sunday are in excess, causing only a slower script
+  list_day = seq(ymd(partial_df$date[[1]]),today(), by = "days") # saturday and sunday are in excess, which cause a slower script
   list_value = rep(NA,times = length(list_day))
   
   i = 1 # index going through partial_df
@@ -74,16 +74,15 @@ fill_missing_dates = function(partial_df, frequency = "month", week_start = F){#
     }
     else{
       i = i + 1
-      if(i == length(partial_df$value)){
+      if(i > length(partial_df$value)){
         break
       }
       if(ymd(partial_df$date[[i]]) == day_floor){
         list_value[[day_index]] = partial_df$value[[i]]
       }
-      else{print("error")}
+      else{stop("Error in fill_missing_dates : partial_df$date is not ordered or a date is missing.")}
     }
   }
-  
   
   
   df = as.data.frame(cbind(list_day,list_value)) %>% 
@@ -106,7 +105,7 @@ fill_missing_dates = function(partial_df, frequency = "month", week_start = F){#
 
 
 ### housing starts
-HOUST = read.csv("./data/HOUST_1206.csv") %>% rename(c("date" = "DATE"))
+HOUST = read.csv("./data/HOUST_1206.csv") %>% dplyr::rename(c("date" = "DATE"))
 partial_df_dhoust = HOUST %>% mutate(value = c(NA, 100*diff(log(HOUST))))
 df_dhoust = fill_missing_dates(partial_df_dhoust, frequency = "month")
 
