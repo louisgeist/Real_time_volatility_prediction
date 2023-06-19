@@ -176,13 +176,15 @@ point_optimal_forecast <-
     
     next_g = next_g_func(alpha, beta, gamma, last_epsilon, last_tau, last_g) # g_1,t+1|t
     
-    opt_forecast = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (h -
-                                                                          1) * (next_g - 1))
+    opt_forecast = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (h - 1) * (next_g - 1))
     
     return(opt_forecast)
   }
 
-series_optimal_forecast <- function(x, h) {
+series_optimal_forecast <- function(x, h) { # makes the predictions for the next h days, from the last day of estimation data
+  # x is a mfGARCH object obtained by fit_mfgarch
+  # h is the horizon of forecast
+  
   alpha = x$par["alpha"][[1]]
   beta = x$par["beta"][[1]]
   gamma = x$par["gamma"][[1]]
@@ -191,7 +193,7 @@ series_optimal_forecast <- function(x, h) {
   last_epsilon = x$df.fitted$spx[[length(x$df.fitted$spx)]]
   last_tau = x$tau[[length(x$tau)]]
   
-  quoted_days = seq_quotation_date(x$df.fitted$date[[length(x$df.fitted$date)]], h)[-c(1)]
+  quoted_days = seq_quotation_date(x$df.fitted$date[[length(x$df.fitted$date)]], h)[-c(1)] # list of days where we want to do a forecast
   
   forecast_list = 1:h
   
@@ -211,7 +213,46 @@ series_optimal_forecast <- function(x, h) {
   
 }
 
+real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the predictions for the next h days, from last day of quotation availabe
+  # x is a mfGARCH object obtained by fit_mfgarch
+  # h is the horizon of forecast
+  
+  alpha = x$par["alpha"][[1]]
+  beta = x$par["beta"][[1]]
+  gamma = x$par["gamma"][[1]]
+  
+  df_epsilon_new = df_epsilon %>% filter(date> x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
+  
+  if(nrow(df_epsilon_new)==0){
+    return(series_optimal_forecast(x,h))
+  }
+  
+  last_g = x$g[[length(x$g)]]
+  last_epsilon = x$df.fitted$spx[[length(x$g)]]
+  df_g_new = double(length(df_epsilon_new$date))
+  
+  for(i in 1:length(df_epsilon_new$date)){
+    df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
+    last_g = df_g_new[[i]]
+    last_epsilon = df_epsilon_new$spx[[i]]
+  }
+  
+  forecast_list = 1:h
+  list_opt_forecast = double(h)
+  next_g = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
+  
+  for(i in forecast_list){
+    list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+  }
+  
+  quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
+  
+  res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
+  res$date = res$date %>% as_date()
+  
+  return(res)
 
+}
 
 ## ----- use of functions ------
 
