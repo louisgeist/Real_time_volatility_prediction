@@ -19,17 +19,7 @@ df_spx = fortify.zoo(spx.ret) %>% dplyr::rename(c("date" = "Index", "spx" = "Clo
 
 # ---- Explanatory variables ----
 ## HOUST
-df_HOUST = get_alfred_series(
-  series_id = "HOUST",
-  series_name = "HOUST",
-  observation_start = "1959-01-01",
-  realtime_start = ymd(today())
-) %>% as_tibble()
-
-
-df_HOUST$value =  c(NA, 100 * diff(log(df_HOUST$HOUST)))
-
-df_dhoust = df_HOUST %>% fill_missing_dates(frequency = "month") %>% as_tibble()
+df_dhoust = import_houst()
 
 # --- Example of use ----
 # Estimation
