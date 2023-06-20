@@ -6,16 +6,11 @@ library(tidyr)
 library(zoo)
 library(tseries)
 
-## S&P 500
-spx.raw <-
-  get.hist.quote(
-    instrument = "^GSPC",
-    start = as.Date("1971-01-01"),
-    quote = "Close"
-  )
-spx.ret = 100 * diff(log(spx.raw)) #stationary times series
+source("./data_import_tools.R")
+source("./forecast.R")
 
-df_spx = fortify.zoo(spx.ret) %>% dplyr::rename(c("date" = "Index", "spx" = "Close"))
+## S&P 500
+df_spx = import_spx()
 
 # ---- Explanatory variables ----
 ## HOUST
@@ -23,7 +18,7 @@ df_dhoust = import_houst()
 
 # --- Example of use ----
 # Estimation
-df = df_spx %>% merge(df_dhoust, by = "date") %>% as_tibble() #%>% dplyr::rename(c("value" = "list_value"))
+df = df_spx %>% merge(df_dhoust, by = "date") %>% as_tibble()
 GM_dhoust = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
@@ -34,14 +29,10 @@ GM_dhoust = mfGARCH::fit_mfgarch(
 )
 
 # Forecast
-source(file = "./forecast.R")
 h = 20
 
-tail(series_optimal_forecast(GM_dhoust, h))
+dhoust_forecast = real_time_optimal_forecast(GM_dhoust,h,df_spx)
 
-ggplot(data = test) + geom_line(aes(x = horizon, y = optimal_prediction))
-ggplot(data = test) + geom_line(aes(x = date, y = optimal_prediction))
+write.csv(dhoust_forecast, "./data_plot", row.names = FALSE)
 
-# series_optimal_forecast(GM_dhoust, h, df_spx)
-
-real_time_optimal_forecast(GM_dhoust, h, df_spx)
+print("real_time_data_import done !")

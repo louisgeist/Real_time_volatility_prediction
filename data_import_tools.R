@@ -62,7 +62,7 @@ import_spx <- function() {
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
   
   df_spx = fortify.zoo(spx.ret)
-  df_spx = rename(df_spx, c("date" = "Index", "spx" = "Close"))
+  df_spx = dplyr::rename(df_spx, c("date" = "Index", "spx" = "Close"))
   
   return(df_spx)
 }
@@ -77,7 +77,7 @@ import_Rvol22 <- function(){
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
   
   Rvol22 = zoo::rollmean(spx.ret**2, 22, align = "right") #the current value and the past 21 values are taken for the mean
-  df_Rvol22 = Rvol22 %>% fortify.zoo() %>%  drop_na() %>% rename(c("date" = "Index", "value" = "Close"))
+  df_Rvol22 = Rvol22 %>% fortify.zoo() %>%  drop_na() %>% dplyr::rename(c("date" = "Index", "value" = "Close"))
   
   return(df_Rvol22)
 }
@@ -89,7 +89,7 @@ import_vix <- function(){
   df_vix = fortify.zoo(vix.raw)
   df_vix = df_vix  %>% drop_na()
   df_vix = mutate(df_vix,vix_dailyscaled = Close/252**(1/2)) # vix which has been converted to a daily level
-  df_vix = df_vix %>% rename(c("date" = "Index", "value" = "vix_dailyscaled")) %>% select(c("date","value"))
+  df_vix = df_vix %>% dplyr::rename(c("date" = "Index", "value" = "vix_dailyscaled")) %>% select(c("date","value"))
   
   return(df_vix)
 }
@@ -102,7 +102,7 @@ import_vrp <- function(){
   vix.raw = get.hist.quote(instrument = "^VIX", start = as.Date("1990-01-01"), quote="Close")
   
   vrp = vix.raw/ 252**(1/2) - Rvol22
-  df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% rename(c("date" = "Index", "value" = "Close"))
+  df_vrp = vrp %>% fortify.zoo() %>% drop_na() %>% dplyr::rename(c("date" = "Index", "value" = "Close"))
   
   return(df_vrp)
 }
@@ -125,7 +125,7 @@ import_houst <- function(){
 
 import_ip <- function(){
   IP = read.csv("./data/IP_120623.csv")
-  partial_df_ip = IP %>% rename(c("date" = "DATE", "value" = "IP"))
+  partial_df_ip = IP %>% dplyr::rename(c("date" = "DATE", "value" = "IP"))
   df_ip = fill_missing_dates(partial_df_ip)
   
   return(df_ip)
