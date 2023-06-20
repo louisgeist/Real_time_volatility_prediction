@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -19,7 +20,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "alfred"))'
+        sudo apt-get update
+        sudo apt-get install -y r-base
 
     - name: Execute R script
-      run: Rscrip real_time_data_import.R
+      run: Rscript path/to/your/script.R
