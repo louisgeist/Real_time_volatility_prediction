@@ -1,9 +1,9 @@
 name: R Script
 
 on:
-  schedule:
-    - cron: [push]
-
+  push:
+    branches:
+      - main
 jobs:
   run:
     runs-on: ubuntu-latest
