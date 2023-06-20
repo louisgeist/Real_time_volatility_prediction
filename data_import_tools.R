@@ -4,60 +4,45 @@
 #In order to use properly "fit_mfgarch", we need to complete between two non consecutive dates the dataframe with the value of the first date ;
 #fill_missing_dates() solves this problem
 
-fill_missing_dates = function(partial_df,
-                              frequency = "month",
-                              week_start = F) {
-  # partial_df must have two columns : "date" & "value" need to be in the partial_df
+fill_missing_dates = function(partial_df, frequency = "month", week_start = FALSE) {
+  # partial_df must have two columns: "date" & "value"
   # if frequency = "week", then week_start needs an integer between 1 and 7 (Monday based)
   
-  list_day = seq(ymd(partial_df$date[[1]]), today(), by = "days") # saturday and sunday are in excess, which cause a slower script
-  list_value = rep(NA, times = length(list_day))
+  list_day <- seq.Date(from = partial_df$date[1], to = Sys.Date(), by = "days")
+  list_value <- rep(NA_real_, length(list_day))
   
-  i = 1 # index going through partial_df
+  i <- 1 # index going through partial_df
   
-  for (day_index in 1:length(list_day)) {
+  for (day_index in seq_along(list_day)) {
     if (frequency == "week") {
-      day_floor = floor_date(list_day[[day_index]], unit = frequency, week_start)
-    }
-    else{
-      # frequency = "month"
-      day_floor = floor_date(list_day[[day_index]], unit = frequency)
+      day_floor <- lubridate::floor_date(list_day[day_index], unit = frequency, week_start)
+    } else {
+      day_floor <- lubridate::floor_date(list_day[day_index], unit = frequency)
     }
     
-    
-    if (ymd(partial_df$date[[i]]) == day_floor) {
-      list_value[[day_index]] = partial_df$value[[i]]
-    }
-    else{
-      i = i + 1
+    if (partial_df$date[i] == day_floor) {
+      list_value[day_index] <- partial_df$value[i]
+    } else {
+      i <- i + 1
       if (i > length(partial_df$value)) {
         break
       }
-      if (ymd(partial_df$date[[i]]) == day_floor) {
-        list_value[[day_index]] = partial_df$value[[i]]
-      }
-      else{
-        stop(
-          "Error in fill_missing_dates : partial_df$date is not ordered or a date is missing."
-        )
+      if (partial_df$date[i] == day_floor) {
+        list_value[day_index] <- partial_df$value[i]
+      } else {
+        stop("Error in fill_missing_dates: partial_df$date is not ordered or a date is missing.")
       }
     }
   }
   
-  
-  df = as.data.frame(cbind(list_day, list_value)) %>%
-    mutate(date = as_date(list_day)) %>%
-    select(-c(list_day)) %>%
+  df <- data.frame(date = list_day, value = list_value) %>%
     drop_na() %>%
-    dplyr::rename(c("value" = "list_value"))
+    mutate(date = as.Date(date))
   
-  
-  # computation of low.freq variable for the "fit_mfGARCH" function
   if (frequency == "week") {
-    df = df %>% mutate(year_week = floor_date(date, unit = frequency, week_start))
-  }
-  else{
-    df = df %>% mutate(year_month = floor_date(date, unit = frequency))
+    df <- df %>% mutate(year_week = lubridate::floor_date(date, unit = frequency, week_start))
+  } else {
+    df <- df %>% mutate(year_month = lubridate::floor_date(date, unit = frequency))
   }
   
   return(df)
@@ -123,4 +108,25 @@ import_vrp <- function(){
 }
 
 ## ----- non daily -----
+import_houst <- function(){
+  df_HOUST = get_alfred_series(
+    series_id = "HOUST",
+    series_name = "HOUST",
+    observation_start = "1959-01-01",
+    realtime_start = ymd(today())
+  ) %>% as_tibble()
+  
+  df_HOUST$value =  c(NA, 100 * diff(log(df_HOUST$HOUST)))
+  
+  df_dhoust = df_HOUST %>% fill_missing_dates(frequency = "month") %>% as_tibble()
+  
+  return(df_dhoust)
+}
 
+import_ip <- function(){
+  IP = read.csv("./data/IP_120623.csv")
+  partial_df_ip = IP %>% rename(c("date" = "DATE", "value" = "IP"))
+  df_ip = fill_missing_dates(partial_df_ip)
+  
+  return(df_ip)
+}
