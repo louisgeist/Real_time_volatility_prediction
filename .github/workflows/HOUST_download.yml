@@ -24,4 +24,4 @@ jobs:
         sudo apt-get install -y r-base
 
     - name: Execute R script
-      run: Rscript path/to/your/script.R
+      run: Rscript real_time_data_import.R
