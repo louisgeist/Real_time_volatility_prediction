@@ -20,8 +20,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        Rscript -e 'install.packages(c("quantmod", "quadprog","curl", "TTR", "htt"))'
-        Rscript -e 'install.packages(c("alfred", "tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2"))'
+        Rscript -e 'install.packages(c("curl", "TTR", "quadprog", "httr", "quantmod"))'
+        Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred"))'
 
     - name: Execute R script
       run: Rscript real_time_data_import.R
