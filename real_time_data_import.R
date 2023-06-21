@@ -1,10 +1,11 @@
-library(alfred)
+#library(alfred)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(tidyr)
 library(zoo)
 library(tseries)
+library(readr)
 
 source("./data_import_tools.R")
 source("./forecast.R")
@@ -33,6 +34,6 @@ h = 20
 
 dhoust_forecast = real_time_optimal_forecast(GM_dhoust,h,df_spx)
 
-write.csv(dhoust_forecast, "./data_plot", row.names = FALSE)
+write_csv(dhoust_forecast, "./data_plot/dhout.csv")
 
 print("real_time_data_import done !")

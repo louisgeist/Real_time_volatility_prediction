@@ -20,8 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr"))'
-        Rscript -e 'install.packages(pkgs = "https://github.com/onnokleen/alfred/")'
+        Rscript -e 'install.packages(c("alfred", "tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr"))'
 
     - name: Execute R script
       run: Rscript real_time_data_import.R
