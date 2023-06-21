@@ -20,6 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        Rscript -e 'install.packages(c("quantmod", "quadprog","curl", "TTR", "htt"))'
         Rscript -e 'install.packages(c("alfred", "tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2"))'
 
     - name: Execute R script
