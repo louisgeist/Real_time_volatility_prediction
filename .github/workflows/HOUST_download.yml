@@ -16,11 +16,11 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
       with:
-        r-version: "4.x"
+        r-version: "4.2.2"
 
     - name: Install dependencies
       run: |
-        Rscript -e 'install.packages(c("alfred", "tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr"))'
+        Rscript -e 'install.packages(c("alfred", "tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2"))'
 
     - name: Execute R script
       run: Rscript real_time_data_import.R
