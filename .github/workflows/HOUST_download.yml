@@ -28,3 +28,18 @@ jobs:
 
     - name: Execute R script
       run: Rscript real_time_data_import.R
+      
+    - name : Commit files
+      env :
+        AUTH : ${{ secrets.GITHUBTOEK }}
+      run : |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action - HOUST"
+        git pull origin master
+        git add --all
+        git commit -m "HOUST - daily"
+
+      - name : Push changes
+         run : |
+          git push --quiet --set-up stream origin HEAD:master
+          echo "pushed to github"
