@@ -1,4 +1,3 @@
-#library(alfred)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
@@ -6,6 +5,9 @@ library(tidyr)
 library(zoo)
 library(tseries)
 library(readr)
+library(alfred)
+
+install.packages("alfred")
 
 source("./data_import_tools.R")
 source("./forecast.R")

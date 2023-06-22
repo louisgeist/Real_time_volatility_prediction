@@ -109,7 +109,7 @@ import_vrp <- function(){
 
 ## ----- non daily -----
 import_houst <- function(){
-  df_HOUST = get_alfred_series(
+  df_HOUST = alfred::get_alfred_series(
     series_id = "HOUST",
     series_name = "HOUST",
     observation_start = "1959-01-01",
