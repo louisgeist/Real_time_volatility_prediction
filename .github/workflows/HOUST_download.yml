@@ -20,6 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt install build-essential gfortran
         Rscript -e 'install.packages(c("curl", "TTR", "quadprog", "httr", "quantmod"))'
         Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred"))'
 
