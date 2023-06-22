@@ -37,7 +37,7 @@ jobs:
         git config --local user.name "GitHub Action - HOUST"
 
         git remote rm origin
-        gitremote add origin https://${AUTH}@github.com/louisgeist/Real_time_volatility_prediction.git
+        git remote add origin https://${AUTH}@github.com/louisgeist/Real_time_volatility_prediction.git
         git pull origin main
         git add --all
         git commit -m "HOUST - daily"
