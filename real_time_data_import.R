@@ -8,8 +8,6 @@ library(readr)
 library(alfred)
 library(mfGARCH)
 
-install.packages("alfred")
-
 source("./data_import_tools.R")
 source("./forecast.R")
 
@@ -37,6 +35,6 @@ h = 20
 
 dhoust_forecast = real_time_optimal_forecast(GM_dhoust,h,df_spx)
 
-write_csv(dhoust_forecast, "./data_plot/dhout.csv")
+write_csv(dhoust_forecast, "./data_plot/dhoust.csv")
 
 print("real_time_data_import done !")
