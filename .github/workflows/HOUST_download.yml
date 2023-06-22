@@ -35,11 +35,11 @@ jobs:
       run : |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action - HOUST"
-        git pull origin master
+        git pull origin main
         git add --all
         git commit -m "HOUST - daily"
 
     - name : Push changes
       run : |
-        git push --quiet --set-upstream origin HEAD:master
+        git push --quiet --set-upstream origin HEAD:main
         echo "pushed to github"
