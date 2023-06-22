@@ -28,7 +28,6 @@ jobs:
 
     - name: Execute R script
       run: Rscript real_time_data_import.R
-      
     - name : Commit files
       env :
         AUTH : ${{ secrets.GITHUBTOEK }}
