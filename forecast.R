@@ -19,7 +19,7 @@ seq_quotation_date = function(initial_date, h) {
   unique_years = lubridate::year(list_days) %>% as.data.frame() %>% dplyr::rename(c("year" = ".")) %>% distinct(year)
   holiday = c()
   for (y in unique_years$year) {
-    holiday = c(holiday, ymd(holidayNYSE(year = y)))
+    holiday = c(holiday, ymd(timeDate::holidayNYSE(year = y)))
   }
   
   quoted_days = c()
@@ -216,6 +216,7 @@ series_optimal_forecast <- function(x, h) { # makes the predictions for the next
 real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the predictions for the next h days, from last day of quotation availabe
   # x is a mfGARCH object obtained by fit_mfgarch
   # h is the horizon of forecast
+  # df_epsilon is the dataframe with all the epsilon available till today
   
   alpha = x$par["alpha"][[1]]
   beta = x$par["beta"][[1]]

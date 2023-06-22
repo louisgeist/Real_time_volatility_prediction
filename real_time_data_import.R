@@ -6,6 +6,7 @@ library(zoo)
 library(tseries)
 library(readr)
 library(alfred)
+library(mfGARCH)
 
 install.packages("alfred")
 
