@@ -40,6 +40,6 @@ jobs:
         git commit -m "HOUST - daily"
 
     - name : Push changes
-        run : |
+      run : |
         git push --quiet --set-upstream origin HEAD:master
         echo "pushed to github"
