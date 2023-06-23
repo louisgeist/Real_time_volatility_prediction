@@ -124,9 +124,32 @@ import_houst <- function(){
 }
 
 import_ip <- function(){
-  IP = read.csv("./data/IP_120623.csv")
-  partial_df_ip = IP %>% dplyr::rename(c("date" = "DATE", "value" = "IP"))
-  df_ip = fill_missing_dates(partial_df_ip)
+  df_ip_partial = alfred::get_alfred_series(
+    series_id = "INDPRO",
+    series_name = "IP",
+    observation_start = "1959-01-01",
+    realtime_start = ymd(today())
+  ) %>% as_tibble() %>% select(c("date","IP"))
+  
+  df_ip_partial$value = c(NA, 100 * diff(log(df_ip_partial$IP)))
+  df_ip = df_ip_partial %>% select(c("date","value")) %>% fill_missing_dates(frequency = "month") %>% as_tibble()
   
   return(df_ip)
+}
+
+import_nai <- function(){
+  
+}
+
+import_nfci <- function(){
+  df_nfci_partial = alfred::get_alfred_series(
+    series_id = "NFCI",
+    series_name = "value",
+    observation_start = "1959-01-01",
+    realtime_start = ymd(today())
+  ) %>% as_tibble() %>% select(c("value","date"))
+  
+  df_nfci = fill_missing_dates(df_nfci_partial, frequency = "week", week_start = 5)
+  
+  return(df_nfci)
 }

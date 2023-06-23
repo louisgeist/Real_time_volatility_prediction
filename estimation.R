@@ -6,7 +6,6 @@ library(fUnitRoots)
 library(mfGARCH)
 library(lubridate)
 
-
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
   variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
@@ -96,7 +95,7 @@ GM_dhoust = mfGARCH::fit_mfgarch(
   weighting = "beta.unrestricted"
 )
 
-### nfci
+### nfci (weekly)
 df = df_spx %>% merge(df_NFCI, by = "date")
 GM_nfci = mfGARCH::fit_mfgarch(
   data = df,
@@ -108,3 +107,27 @@ GM_nfci = mfGARCH::fit_mfgarch(
 )
 GM_nfci$week_start <-
   5 # should be the same as indicated in data_import.R
+
+
+### Industrial production
+df = df_spx %>% merge(df_ip, by = "date")
+GM_ip = mfGARCH::fit_mfgarch(
+  data = df,
+  y = "spx",
+  x = "value",
+  low.freq = "year_month",
+  K = 36,
+  weighting = "beta.restricted"
+)
+
+### Chicago Fed National Activity Index (CFNAI)
+df = df_spx %>% merge(df_nai, by = "date") %>% filter(year(date)<2019)
+GM_nai = mfGARCH::fit_mfgarch(
+  data = df ,
+  y = "spx",
+  x = "value",
+  low.freq  = "year_month",
+  K = 36,
+  weighting = "beta.restricted"
+)
+
