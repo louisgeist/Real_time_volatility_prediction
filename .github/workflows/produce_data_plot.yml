@@ -45,7 +45,7 @@ jobs:
         git remote add origin https://${AUTH}@github.com/louisgeist/Real_time_volatility_prediction.git
         git pull origin main
         git add --all
-        git commit -m "HOUST - daily"
+        git commit -m "daily data import"
 
     - name : Push changes
       run : |
