@@ -1,11 +1,5 @@
-library(tseries)
-library(dplyr)
-library(tidyr)
-library(zoo)
-library(lubridate)
-library(alfred)
-
-source(file = "./data_import_tools.R")
+# WARNING : data_import_tools.R needs to be imported
+source("./data_import_tools.R")
 
 # NB : df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
 

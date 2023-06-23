@@ -1,7 +1,6 @@
 # ----- Forecast with a GARCH-MIDAS ------
 # forecast function rely on the "mfGARCH" package
 library(timeDate)
-library(plyr)
 
 ## ----- general useful function for forecast -----
 next_g_func <- function(alpha, beta, gamma, epsilon, tau, g) {
@@ -222,6 +221,9 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
   beta = x$par["beta"][[1]]
   gamma = x$par["gamma"][[1]]
   
+  if(is.null(df_epsilon)){
+    stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
+  }
   df_epsilon_new = df_epsilon %>% filter(date> x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
   
   if(nrow(df_epsilon_new)==0){

@@ -1,10 +1,4 @@
-library(forecast)
-library(tseries)
-library(rugarch)
-library(zoo)
-library(fUnitRoots)
-library(mfGARCH)
-library(lubridate)
+# WARNING : data_import.R should be runned before running this script
 
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
@@ -12,10 +6,15 @@ spec_garch = ugarchspec(
   mean.model = list(include.mean = FALSE),
   distribution.model = "norm"
 )
-model = ugarchfit(spec_garch, spx.ret)
-model
+GARCH11 = ugarchfit(spec_garch, df_spx$spx)
 
-plot(model@fit[["sigma"]], type = "l", ylab = "Sigma")
+forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahead = 30)
+
+# results display
+# model
+# forecast_bootstrap
+
+# plot(model@fit[["sigma"]], type = "l", ylab = "Sigma")
 
 
 # ----- GARCH-MIDAS with one explanatory variable --------
@@ -26,7 +25,7 @@ df = merge(df_spx, df_vix, by = "date")
 GM_sp_vix = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
-  x = "vix",
+  x = "value",
   K = 3,
   low.freq = "date",
   weighting = "beta.restricted"
@@ -38,7 +37,7 @@ df = merge(df_spx, df_Rvol22, by = "date")
 GM_sp_Rvol22 = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
-  x = "Rvol22",
+  x = "value",
   K = 264,
   low.freq = "date",
   weighting = "beta.restricted"
@@ -49,39 +48,12 @@ df = merge(df_spx, df_vrp, by = "date")
 GM_sp_vrp = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
-  x = "vrp",
+  x = "value",
   K = 3,
   low.freq = "date",
   weighting = "beta.restricted"
 )
 
-
-# Focus on period 1990 - 2018 (as in the paper)
-df_2018 = df_spx %>% merge(df_vix, by = "date") %>% filter(year(date) < 2019)
-
-results_2018 = mfGARCH::fit_mfgarch(
-  data = df_2018,
-  y = "spx",
-  x = "vix",
-  K = 3,
-  low.freq = "date",
-  weighting = "beta.restricted"
-)
-round(results_2018$par, 4)
-
-sum(is.na(df_2018$spx))
-
-# Rvol(22)
-df = df_spx %>% merge(df_Rvol22, by = "date") %>% filter(year(date) < 2019) %>% filter(1989 < year(date))
-GM_sp_Rvol22_restriced_period = mfGARCH::fit_mfgarch(
-  data = df,
-  y = "spx",
-  x = "Rvol22",
-  K = 264,
-  low.freq = "date",
-  weighting = "beta.restricted"
-)
-round(GM_sp_Rvol22_restriced_period$par, 4)
 
 ## ------ Non daily explanatory variable -------
 ### dhoust
@@ -96,7 +68,7 @@ GM_dhoust = mfGARCH::fit_mfgarch(
 )
 
 ### nfci (weekly)
-df = df_spx %>% merge(df_NFCI, by = "date")
+df = df_spx %>% merge(df_nfci, by = "date")
 GM_nfci = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
@@ -121,7 +93,7 @@ GM_ip = mfGARCH::fit_mfgarch(
 )
 
 ### Chicago Fed National Activity Index (CFNAI)
-df = df_spx %>% merge(df_nai, by = "date") %>% filter(year(date)<2019)
+df = df_spx %>% merge(df_nai, by = "date") %>% filter(year(date) < 2019)
 GM_nai = mfGARCH::fit_mfgarch(
   data = df ,
   y = "spx",
@@ -131,3 +103,26 @@ GM_nai = mfGARCH::fit_mfgarch(
   weighting = "beta.restricted"
 )
 
+
+
+# ----- GARCH-MIDAS with two explanatory variables ------
+
+df = df_spx %>%
+  merge(df_vix, by = "date") %>% #value -> value.x
+  merge(df_dhoust, by = "date") %>% #value -> value.y
+  as_tibble()
+
+GM_vix_dhoust = fit_mfgarch(
+  data = df,
+  y = "spx",
+  x = "value.y",
+  K = 36,
+  low.freq = "date",
+  var.ratio.freq = "year_month",
+  weighting = "beta.unrestricted",
+  
+  x.two = "value.x",
+  K.two = 3,
+  low.freq.two = "date",
+  weighting.two = "beta.restricted"
+)
