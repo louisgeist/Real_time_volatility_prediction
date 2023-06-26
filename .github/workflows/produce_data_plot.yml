@@ -30,8 +30,8 @@ jobs:
         path: ${{ runner.home }}/R/Library
         key: ${{runner.os}}-r-packages-$
 
-    - name: Install dependencies
-      if: steps.check-cache.outputs.cache-hit != 'true'
+    - if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
+      name: Install dependencies
       run: |
         sudo apt install build-essential gfortran
         sudo apt-get install libcurl4-openssl-dev r-base
