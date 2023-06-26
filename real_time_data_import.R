@@ -10,8 +10,6 @@ library(alfred)
 library(mfGARCH)
 library(rugarch)
 
-
-
 # ----- 1. Data import -----
 source("./data_import.R")
 
@@ -27,12 +25,13 @@ h = 80
 for(model in models_list){
   # variable_name = substr(model, start = 4, stop = nchar(model))
   
-  new_forecast = real_time_optimal_forecast(get(model),h,df_spx) %>% dplyr::rename(model = "forecast")
+  new_forecast = real_time_optimal_forecast(get(model),h,df_spx) %>% dplyr::rename(!!model := "forecast")
+  print(names(new_forecast))
+  #
   
   if(model == models_list[[1]]){
     df_forecast = new_forecast
-  }
-  else{
+  } else{
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
   }
 }

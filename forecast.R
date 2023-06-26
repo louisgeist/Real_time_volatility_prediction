@@ -201,9 +201,9 @@ series_optimal_forecast <- function(x, h) { # makes the predictions for the next
     .margins = c(1),
     .fun = function(h)
       point_optimal_forecast(x, h)
-  ) %>% dplyr::rename(c("optimal_prediction" = "V1")) %>%
+  ) %>% dplyr::rename(c("forecast" = "V1")) %>%
     mutate(horizon = as.numeric(X1)) %>% 
-    select(c("horizon","optimal_prediction"))
+    select(c("horizon","forecast"))
   
   tib = as_tibble(df)
   tib$date = quoted_days
