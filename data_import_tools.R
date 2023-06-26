@@ -136,7 +136,8 @@ import_houst <- function() {
     series_id = "HOUST",
     series_name = "HOUST",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today())
+    realtime_start = ymd(today()),
+    api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble()
   
   df_HOUST$value =  c(NA, 100 * diff(log(df_HOUST$HOUST)))
@@ -151,7 +152,8 @@ import_ip <- function() {
     series_id = "INDPRO",
     series_name = "IP",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today())
+    realtime_start = ymd(today()),
+    api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("date", "IP"))
   
   df_ip_partial$value = c(NA, 100 * diff(log(df_ip_partial$IP)))
@@ -165,7 +167,8 @@ import_nai <- function() {
     series_id = "CFNAI",
     series_name = "value",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today())
+    realtime_start = ymd(today()),
+    api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("date", "value"))
   
   
@@ -179,7 +182,8 @@ import_nfci <- function() {
     series_id = "NFCI",
     series_name = "value",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today())
+    realtime_start = ymd(today()),
+    api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("value", "date")) %>% mutate(date = date - 4) # we do this transformation, because the value of the friday corresponds to the week ending at that friday
     
     df_nfci = fill_missing_dates(df_nfci_partial,

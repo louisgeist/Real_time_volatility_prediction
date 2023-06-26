@@ -22,7 +22,7 @@ models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_sp_Rvol22","GM_sp_vix
 
 # ------ 3. Forecast ------
 source("./forecast.R")
-
+h = 80
 
 for(model in models_list){
   # variable_name = substr(model, start = 4, stop = nchar(model))
