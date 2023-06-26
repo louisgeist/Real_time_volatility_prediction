@@ -1,11 +1,11 @@
 name: R Script
 
 on:
-#  schedule:
-#    - cron: "0 0 * * *"
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 0 * * *"
+#  push:
+#    branches:
+#      - main
 
 permissions : 
   contents: write
@@ -23,15 +23,15 @@ jobs:
       with:
         r-version: "4.2.2"
     
-    - name: Check the dependency cache
-      id: check-cache
-      uses: actions/cache@v2
-      with:
-        path: ${{ runner.home }}/R/Library
-        key: ${{runner.os}}-r-packages-$
+#    - name: Check the dependency cache
+#      id: check-cache
+#      uses: actions/cache@v2
+#      with:
+#        path: ${{ runner.home }}/R/Library
+#        key: ${{runner.os}}-r-packages-$
 
-    - if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
-      name: Install dependencies
+#    - if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
+    - name: Install dependencies
       run: |
         sudo apt install build-essential gfortran
         sudo apt-get install libcurl4-openssl-dev r-base
