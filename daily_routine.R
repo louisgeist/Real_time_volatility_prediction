@@ -38,15 +38,29 @@ for(model in models_list){
 
 
 # ----- 4. save in .csv ------
+# past data save
+index_list = c("dhoust","ip","nai","nfci","Rvol22","vix","vrp")
+for(index in index_list){
+  new_df = get(paste0("df_",index)) %>% dplyr::rename(!!index := "value")
+  
+  if(index == index_list[[1]]){
+    df_training_data = new_df
+  } else{
+    df_training_data = df_training_data %>% merge( new_df, by = "date")
+  }
+}
+name = paste0("./data_plot/", today(),"_training_data.csv")
+write_csv(df_training_data, name)
 
-name = paste0("./data_plot/df_forecast_",today(),".csv")
+# forecasts save
+name = paste0("./data_plot/", today(),"_forecasts.csv")
 
 write_csv(df_forecast, name)
 
 print("real_time_data_import done !")
 
 
-### Example of process
+### Example of complete process (estimation is done in this script, not using estimation.R for the example)
 
 # # ---- Explanatory variables ----
 # ## HOUST
