@@ -16,7 +16,7 @@ source("./data_import.R")
 # ------ 2. Training ------
 source("./estimation.R")
 
-models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_sp_Rvol22","GM_sp_vix","GM_sp_vrp","GM_vix_dhoust")
+models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22","GM_vix","GM_vrp","GM_vix_dhoust")
 
 # ------ 3. Forecast ------
 source("./forecast.R")

@@ -22,7 +22,7 @@ forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahe
 
 ## s&p explained by vix
 df = merge(df_spx, df_vix, by = "date")
-GM_sp_vix = mfGARCH::fit_mfgarch(
+GM_vix = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
   x = "value",
@@ -34,7 +34,7 @@ GM_sp_vix = mfGARCH::fit_mfgarch(
 
 ## s&p explained by Rvol22
 df = merge(df_spx, df_Rvol22, by = "date")
-GM_sp_Rvol22 = mfGARCH::fit_mfgarch(
+GM_Rvol22 = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
   x = "value",
@@ -45,7 +45,7 @@ GM_sp_Rvol22 = mfGARCH::fit_mfgarch(
 
 ## s&p explained by vrp
 df = merge(df_spx, df_vrp, by = "date")
-GM_sp_vrp = mfGARCH::fit_mfgarch(
+GM_vrp = mfGARCH::fit_mfgarch(
   data = df,
   y = "spx",
   x = "value",
