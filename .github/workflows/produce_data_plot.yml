@@ -32,7 +32,7 @@ jobs:
         Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred"))'
 
     - name: Execute R script
-      run: Rscript real_time_data_import.R
+      run: Rscript daily_routinereal_time_data_import.R
 
     - name : Commit files
       env :
