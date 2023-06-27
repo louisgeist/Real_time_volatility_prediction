@@ -2,7 +2,7 @@ name: R Script
 
 on:
   schedule:
-    - cron: "00 8 * * *"
+    - cron: "18 6 * * *"
 #  push:
 #    branches:
 #      - main
