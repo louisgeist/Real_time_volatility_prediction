@@ -133,7 +133,7 @@ df = df_spx %>%
   merge(df_nfci, by = "date") %>% #value -> value.y
   as_tibble()
 
-GM_vix_dhoust = fit_mfgarch(
+GM_vix_nfci = fit_mfgarch(
   data = df,
   y = "spx",
   x = "value.y",
@@ -154,7 +154,7 @@ df = df_spx %>%
   merge(df_nai, by = "date") %>% #value -> value.y
   as_tibble()
 
-GM_vix_dhoust = fit_mfgarch(
+GM_vix_nai = fit_mfgarch(
   data = df,
   y = "spx",
   x = "value.y",
@@ -174,7 +174,7 @@ df = df_spx %>%
   merge(df_ip, by = "date") %>% #value -> value.y
   as_tibble()
 
-GM_vix_dhoust = fit_mfgarch(
+GM_vix_ip = fit_mfgarch(
   data = df,
   y = "spx",
   x = "value.y",
