@@ -106,10 +106,72 @@ GM_nai = mfGARCH::fit_mfgarch(
 
 
 # ----- GARCH-MIDAS with two explanatory variables ------
-
+# vix & dhoust
 df = df_spx %>%
   merge(df_vix, by = "date") %>% #value -> value.x
   merge(df_dhoust, by = "date") %>% #value -> value.y
+  as_tibble()
+
+GM_vix_dhoust = fit_mfgarch(
+  data = df,
+  y = "spx",
+  x = "value.y",
+  K = 36,
+  low.freq = "date",
+  var.ratio.freq = "year_month",
+  weighting = "beta.unrestricted",
+  
+  x.two = "value.x",
+  K.two = 3,
+  low.freq.two = "date",
+  weighting.two = "beta.restricted"
+)
+
+# vix & nfci
+df = df_spx %>%
+  merge(df_vix, by = "date") %>% #value -> value.x
+  merge(df_nfci, by = "date") %>% #value -> value.y
+  as_tibble()
+
+GM_vix_dhoust = fit_mfgarch(
+  data = df,
+  y = "spx",
+  x = "value.y",
+  K = 36,
+  low.freq = "date",
+  var.ratio.freq = "year_month",
+  weighting = "beta.unrestricted",
+  
+  x.two = "value.x",
+  K.two = 3,
+  low.freq.two = "date",
+  weighting.two = "beta.restricted"
+)
+
+# vix & nai
+df = df_spx %>%
+  merge(df_vix, by = "date") %>% #value -> value.x
+  merge(df_nai, by = "date") %>% #value -> value.y
+  as_tibble()
+
+GM_vix_dhoust = fit_mfgarch(
+  data = df,
+  y = "spx",
+  x = "value.y",
+  K = 36,
+  low.freq = "date",
+  var.ratio.freq = "year_month",
+  weighting = "beta.unrestricted",
+  
+  x.two = "value.x",
+  K.two = 3,
+  low.freq.two = "date",
+  weighting.two = "beta.restricted"
+)
+# vix & ip
+df = df_spx %>%
+  merge(df_vix, by = "date") %>% #value -> value.x
+  merge(df_ip, by = "date") %>% #value -> value.y
   as_tibble()
 
 GM_vix_dhoust = fit_mfgarch(
