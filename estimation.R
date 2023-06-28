@@ -3,12 +3,12 @@
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
   variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
-  mean.model = list(include.mean = FALSE),
+  mean.model = list(include.mean = TRUE, armaOrder = c(0,0)),
   distribution.model = "norm"
 )
 GARCH11 = ugarchfit(spec_garch, df_spx$spx)
 
-forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahead = 30)
+# forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahead = 30)
 
 # results display
 # model

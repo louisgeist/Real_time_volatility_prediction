@@ -22,6 +22,7 @@ models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22","GM_vix","GM_
 source("./forecast.R")
 h = 80
 
+# GARCH-MIDAS models
 for(model in models_list){
   # variable_name = substr(model, start = 4, stop = nchar(model))
   
@@ -35,6 +36,11 @@ for(model in models_list){
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
   }
 }
+
+
+
+# GARCH11
+forecast_garch11  = ugarchforecast(x, n.ahead = 80)@forecast$sigmaFor
 
 
 # ----- 4. save in .csv ------
