@@ -137,9 +137,9 @@ GM_vix_nfci = fit_mfgarch(
   data = df,
   y = "spx",
   x = "value.y",
-  K = 36,
+  K = 52,
   low.freq = "date",
-  var.ratio.freq = "year_month",
+  var.ratio.freq = "year_week",
   weighting = "beta.unrestricted",
   
   x.two = "value.x",
