@@ -158,7 +158,27 @@ bootstrap_forecast <- function(x, h) {
 }
 
 ## ----- optimal forecast ----
+### GARCH(1,1)
+x = GARCH11
 
+GARCH11_optimal_forecast <-
+  function(x,h){
+    # returns a list of optimal forecast for horizon 1 to h
+    
+    omega = x@fit$coef[["omega"]]
+    alpha = x@fit$coef[["alpha"]]
+    beta = x@fit$coef[["beta"]]
+    
+    first_sigma =  omega + alpha * 
+    
+    point_forecast <- function(k){
+      return(omega * (1- (alpha+beta)^k)/(1-alpha-beta) + (alpha+beta)^(k-1) * first_sigma)
+    }
+    
+  }
+
+
+### GARCH-MIDAS
 point_optimal_forecast <-
   function(x, h) {
     # the optimal forecast is only given for the h^th day ahead.
@@ -257,6 +277,8 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
 
 }
 
+
+
 ## ----- use of functions ------
 
 # bug in display with ggplot2, because the columns of my df are not double, but lists of length 1
@@ -282,10 +304,3 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
 # 
 # p = ggplot(res_tibble) + geom_line(aes(x = horizon, y = g))
 # p
-
-
-
-
-### Smoothness of tau ?
-# plot = ggplot(data = df_resi_g_tau)+geom_line((aes(x = date, y = tau)))
-# plot
