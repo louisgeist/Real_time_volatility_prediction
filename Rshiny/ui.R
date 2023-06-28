@@ -13,35 +13,45 @@ fluidPage(
   ##### SIDE BAR LAYOUT
   sidebarLayout(
     sidebarPanel(
-    
-      dateInput(
-        "origin_date",
-        "Last day of data for forecasts :",
-        value = Sys.Date(),
-        min = "2023-06-26",
-        max = Sys.Date(),
-        format = "yyyy-mm-dd",
-      ),
+      wellPanel(
+        dateInput(
+          "origin_date",
+          "Last day of data for forecasts :",
+          value = Sys.Date(),
+          min = "2023-06-26",
+          max = Sys.Date(),
+          format = "yyyy-mm-dd",
+        ),
+        
+        
+        # sliderInput : button to slide
+        # numericInput : number to type
+        sliderInput(
+          "horizon",
+          "Forecast horizon (in days):",
+          value = 30,
+          min = 1,
+          max = 90
+        ),
+        
+        checkboxGroupInput("models", "Choose the displayed models :", 
+                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust"),
+                           selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust"))
+        ),
+      wellPanel(
       
       
-      # sliderInput : button to slide
-      # numericInput : number to type
-      sliderInput(
-        "horizon",
-        "Forecast horizon (in days):",
-        value = 30,
-        min = 1,
-        max = 90
-      ),
-      
-      checkboxGroupInput("models", "Choose the displayed models :", 
-                         choices = c("GM_dhoust", "GM_ip", "GM_nai"),
-                         selected = c("GM_dhoust", "GM_ip", "GM_nai"))
-      
-
+      selectInput("explanatory_variable",
+                  "Explanatory variable :",
+                  choices = c("Rvol22","vix","vrp","nfci","dhoust","ip","nai"),
+                  selected = "dhoust")
+      )
     ),
     
     ##### MAIN PANEL
-    mainPanel(plotlyOutput("plot"))
+    mainPanel(
+      plotlyOutput("plot"), 
+      plotlyOutput("plot_training_data")
+      )
   )
 )
