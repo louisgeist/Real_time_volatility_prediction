@@ -16,21 +16,23 @@ source("./data_import.R")
 # ------ 2. Training ------
 source("./estimation.R")
 
-models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22","GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci")
+
 
 # ------ 3. Forecast ------
 source("./forecast.R")
 h = 80
 
 # GARCH-MIDAS models
-for(model in models_list){
+GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22","GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci")
+
+for(model in GM_models_list){
   # variable_name = substr(model, start = 4, stop = nchar(model))
   
   new_forecast = real_time_optimal_forecast(get(model),h,df_spx) %>% select("date","forecast")%>% dplyr::rename(!!model := "forecast")
   print(names(new_forecast))
   
   
-  if(model == models_list[[1]]){
+  if(model == GM_models_list[[1]]){
     df_forecast = new_forecast 
   } else{
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
