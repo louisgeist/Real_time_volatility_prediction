@@ -166,15 +166,19 @@ GARCH11_optimal_forecast <-
     # returns a list of optimal forecast for horizon 1 to h
     
     omega = x@fit$coef[["omega"]]
-    alpha = x@fit$coef[["alpha"]]
-    beta = x@fit$coef[["beta"]]
+    alpha = x@fit$coef[["alpha1"]]
+    beta = x@fit$coef[["beta1"]]
     
-    first_sigma =  omega + alpha * 
+    n = length(GARCH11@fit$sigma)
+    
+    first_sigma =  omega + alpha * x@fit$residuals[[n]]**2  + beta * x@fit$sigma[[n]] #GARCH recursive relationship
     
     point_forecast <- function(k){
       return(omega * (1- (alpha+beta)^k)/(1-alpha-beta) + (alpha+beta)^(k-1) * first_sigma)
     }
     
+    res = adply( 1:h, .margins = c(1), .fun = point_forecast) %>% dplyr::rename(c("forecast" = "V1")) %>% as_tibble()
+    return(res)
   }
 
 
