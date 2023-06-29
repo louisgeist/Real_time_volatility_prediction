@@ -31,11 +31,11 @@ fluidPage(
           "Forecast horizon (in days):",
           value = 30,
           min = 1,
-          max = 90
+          max = 80
         ),
         
         checkboxGroupInput("models", "Choose the displayed models :", 
-                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust"),
+                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip"),
                            selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust"))
         ),
       wellPanel(

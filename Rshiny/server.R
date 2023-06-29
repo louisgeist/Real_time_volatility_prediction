@@ -60,8 +60,10 @@ function(input, output, session) {
     for(i in seq_along(input$models)){
       new_model = input$models[[i]]
       
-      main_plot = main_plot %>% add_lines(y = as.formula(paste0("~", new_model)), name = new_model, line = list(color = color_palette[i]))
+      main_plot = main_plot %>% add_markers(y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
+      # "add_lines"
     }
+    
     
     main_plot = main_plot %>%
       layout(title = "Graph",
