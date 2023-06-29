@@ -26,12 +26,12 @@ h = 80
 for(model in models_list){
   # variable_name = substr(model, start = 4, stop = nchar(model))
   
-  new_forecast = real_time_optimal_forecast(get(model),h,df_spx) %>% dplyr::rename(!!model := "forecast")
+  new_forecast = real_time_optimal_forecast(get(model),h,df_spx) %>% select("date","forecast")%>% dplyr::rename(!!model := "forecast")
   print(names(new_forecast))
-  #
+  
   
   if(model == models_list[[1]]){
-    df_forecast = new_forecast
+    df_forecast = new_forecast 
   } else{
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
   }
@@ -40,12 +40,16 @@ for(model in models_list){
 
 
 # GARCH11
-forecast_garch11  = ugarchforecast(x, n.ahead = 80)@forecast$sigmaFor
+forecast_garch11  = ugarchforecast(GARCH11, n.ahead = h)@forecast$sigmaFor
+
+df_forecast = df_forecast %>% bind_cols(forecast_garch11[,1]) 
+df_forecast = df_forecast %>% dplyr::rename("GARCH11" = paste0("...", length(df_forecast)))
 
 
 # ----- 4. save in .csv ------
 # past data save
 index_list = c("dhoust","ip","nai","nfci","Rvol22","vix","vrp")
+
 for(index in index_list){
   new_df = get(paste0("df_",index)) %>% dplyr::rename(!!index := "value")
   
@@ -55,6 +59,7 @@ for(index in index_list){
     df_training_data = df_training_data %>% merge( new_df, by = "date")
   }
 }
+
 name = paste0("./data_plot/", today(),"_training_data.csv")
 write_csv(df_training_data, name)
 
