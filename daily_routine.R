@@ -52,14 +52,19 @@ df_forecast = df_forecast %>% dplyr::rename("GARCH11" = paste0("...", length(df_
 # past data save
 index_list = c("dhoust","ip","nai","nfci","Rvol22","vix","vrp")
 
+df_training_data = df_spx
+
 for(index in index_list){
   new_df = get(paste0("df_",index)) %>% dplyr::rename(!!index := "value")
   
-  if(index == index_list[[1]]){
-    df_training_data = new_df
-  } else{
-    df_training_data = df_training_data %>% merge( new_df, by = "date")
-  }
+  df_training_data = df_training_data %>% merge(new_df, by = "date")
+  
+  
+  #if(index == index_list[[1]]){
+  #  df_training_data = new_df
+  #} else{
+  #  df_training_data = df_training_data %>% merge( new_df, by = "date")
+  #}
 }
 
 name = paste0("./data_plot/", today(),"_training_data.csv")
