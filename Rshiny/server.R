@@ -87,7 +87,7 @@ function(input, output, session) {
   })
   
   output$spx_plot <- renderPlotly({
-     p = plot_ly(df_spx, x = ~date, y = ~spx, mode = 'lines') %>%
+     p = plot_ly(df_training_data(), x = ~date, y = ~spx, mode = 'lines') %>%
        layout(title = "S&p500 (at closing)",
               xaxis = list(title = "Date"),
               yaxis = list(title = "Close value"))

@@ -10,13 +10,15 @@ fluidPage(
   titlePanel("Real time volatility forecast"),
   h1("Optimal volatility forecast with GARCH-MIDAS models"),
   
+  
+  
   ##### SIDE BAR LAYOUT
   sidebarLayout(
     sidebarPanel(
       wellPanel(
         dateInput(
           "origin_date",
-          "Last day of data for forecasts :",
+          "Date of data download :",
           value = Sys.Date(),
           min = "2023-06-26",
           max = Sys.Date(),
@@ -54,6 +56,5 @@ fluidPage(
       plotlyOutput("plot_training_data"),
       plotlyOutput("spx_plot")
       )
-  ),
-  "blabla"
+  )
 )
