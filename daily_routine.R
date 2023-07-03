@@ -57,7 +57,7 @@ df_training_data = df_spx
 for(index in index_list){
   new_df = get(paste0("df_",index)) %>% dplyr::rename(!!index := "value")
   
-  df_training_data = df_training_data %>% merge(new_df, by = "date")
+  df_training_data = df_training_data %>% left_join(new_df, by = "date")
   
   
   #if(index == index_list[[1]]){
@@ -66,6 +66,8 @@ for(index in index_list){
   #  df_training_data = df_training_data %>% merge( new_df, by = "date")
   #}
 }
+
+df_training_data = df_training_data %>% select(c("date","spx",index_list)) # in order to remove the "year_month" or "year_week" variables
 
 name = paste0("./data_plot/", today(),"_training_data.csv")
 write_csv(df_training_data, name)
