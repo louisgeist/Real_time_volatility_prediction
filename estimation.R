@@ -93,7 +93,7 @@ GM_ip = mfGARCH::fit_mfgarch(
 )
 
 ### Chicago Fed National Activity Index (CFNAI)
-df = df_spx %>% merge(df_nai, by = "date") %>% filter(year(date) < 2019)
+df = df_spx %>% merge(df_nai, by = "date")
 GM_nai = mfGARCH::fit_mfgarch(
   data = df ,
   y = "spx",
