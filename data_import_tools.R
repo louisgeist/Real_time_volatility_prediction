@@ -78,6 +78,22 @@ import_spx <- function() {
   return(df_spx)
 }
 
+import_ndx <- function() {
+  # Automatic import of NASDAQ-100 from Yahoo finance
+  ndx.raw <-
+    get.hist.quote(
+      instrument = "^NDX",
+      start = as.Date("1971-01-01"),
+      quote = "Close"
+    )
+  ndx.ret = 100 * diff(log(ndx.raw)) #stationary times series
+  
+  df_ndx = fortify.zoo(ndx.ret)
+  df_ndx = dplyr::rename(df_ndx, c("date" = "Index", "ndx" = "Close")) %>% as_tibble()
+  
+  return(df_ndx)
+}
+
 import_Rvol22 <- function() {
   spx.raw <-
     get.hist.quote(
