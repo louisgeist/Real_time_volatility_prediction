@@ -1,4 +1,11 @@
-# WARNING : data_import.R should be runned before running this script
+# WARNING : 
+# 1. data_import.R should be runned before running this script
+# 2. main_index should be a string containing the name of a valid index
+
+# ----- adaptation to the main chosen index
+df_main_index = get(paste0("df_",main_index)) %>%
+  dplyr::rename(!!main_index := "value")
+
 
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
@@ -6,7 +13,7 @@ spec_garch = ugarchspec(
   mean.model = list(include.mean = TRUE, armaOrder = c(0,0)),
   distribution.model = "norm"
 )
-GARCH11 = ugarchfit(spec_garch, df_spx$spx)
+GARCH11 = ugarchfit(spec_garch, df_main_index[,2] %>% as.data.frame() )
 
 # forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahead = 30)
 
@@ -21,10 +28,10 @@ GARCH11 = ugarchfit(spec_garch, df_spx$spx)
 ## ----- Daily explanatory variables (VIX, Rvol22, vrp) -----
 
 ## s&p explained by vix
-df = merge(df_spx, df_vix, by = "date")
+df = merge(df_main_index, df_vix, by = "date")
 GM_vix = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   K = 3,
   low.freq = "date",
@@ -33,10 +40,10 @@ GM_vix = mfGARCH::fit_mfgarch(
 # plot_weighting_scheme(GM_sp_vix)
 
 ## s&p explained by Rvol22
-df = merge(df_spx, df_Rvol22, by = "date")
+df = merge(df_main_index, df_Rvol22, by = "date")
 GM_Rvol22 = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   K = 264,
   low.freq = "date",
@@ -44,10 +51,10 @@ GM_Rvol22 = mfGARCH::fit_mfgarch(
 )
 
 ## s&p explained by vrp
-df = merge(df_spx, df_vrp, by = "date")
+df = merge(df_main_index, df_vrp, by = "date")
 GM_vrp = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   K = 3,
   low.freq = "date",
@@ -57,10 +64,10 @@ GM_vrp = mfGARCH::fit_mfgarch(
 
 ## ------ Non daily explanatory variable -------
 ### dhoust
-df = df_spx %>% merge(df_dhoust, by = "date")
+df = df_main_index %>% merge(df_dhoust, by = "date")
 GM_dhoust = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   low.freq = "year_month",
   K =  36,
@@ -68,10 +75,10 @@ GM_dhoust = mfGARCH::fit_mfgarch(
 )
 
 ### nfci (weekly)
-df = df_spx %>% merge(df_nfci, by = "date")
+df = df_main_index %>% merge(df_nfci, by = "date")
 GM_nfci = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   low.freq = "year_week",
   K =  52,
@@ -82,10 +89,10 @@ GM_nfci$week_start <-
 
 
 ### Industrial production
-df = df_spx %>% merge(df_ip, by = "date")
+df = df_main_index %>% merge(df_ip, by = "date")
 GM_ip = mfGARCH::fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value",
   low.freq = "year_month",
   K = 36,
@@ -93,10 +100,10 @@ GM_ip = mfGARCH::fit_mfgarch(
 )
 
 ### Chicago Fed National Activity Index (CFNAI)
-df = df_spx %>% merge(df_nai, by = "date")
+df = df_main_index %>% merge(df_nai, by = "date")
 GM_nai = mfGARCH::fit_mfgarch(
   data = df ,
-  y = "spx",
+  y = main_index,
   x = "value",
   low.freq  = "year_month",
   K = 36,
@@ -107,14 +114,14 @@ GM_nai = mfGARCH::fit_mfgarch(
 
 # ----- GARCH-MIDAS with two explanatory variables ------
 # vix & dhoust
-df = df_spx %>%
+df = df_main_index %>%
   merge(df_vix, by = "date") %>% #value -> value.x
   merge(df_dhoust, by = "date") %>% #value -> value.y
   as_tibble()
 
 GM_vix_dhoust = fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value.y",
   K = 36,
   low.freq = "date",
@@ -128,14 +135,14 @@ GM_vix_dhoust = fit_mfgarch(
 )
 
 # vix & nfci
-df = df_spx %>%
+df = df_main_index %>%
   merge(df_vix, by = "date") %>% #value -> value.x
   merge(df_nfci, by = "date") %>% #value -> value.y
   as_tibble()
 
 GM_vix_nfci = fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value.y",
   K = 52,
   low.freq = "date",
@@ -149,14 +156,14 @@ GM_vix_nfci = fit_mfgarch(
 )
 
 # vix & nai
-df = df_spx %>%
+df = df_main_index %>%
   merge(df_vix, by = "date") %>% #value -> value.x
   merge(df_nai, by = "date") %>% #value -> value.y
   as_tibble()
 
 GM_vix_nai = fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value.y",
   K = 36,
   low.freq = "date",
@@ -169,14 +176,14 @@ GM_vix_nai = fit_mfgarch(
   weighting.two = "beta.restricted"
 )
 # vix & ip
-df = df_spx %>%
+df = df_main_index %>%
   merge(df_vix, by = "date") %>% #value -> value.x
   merge(df_ip, by = "date") %>% #value -> value.y
   as_tibble()
 
 GM_vix_ip = fit_mfgarch(
   data = df,
-  y = "spx",
+  y = main_index,
   x = "value.y",
   K = 36,
   low.freq = "date",
