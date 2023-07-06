@@ -248,20 +248,21 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
   if(is.null(df_epsilon)){
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
-  df_epsilon_new = df_epsilon %>% filter(date> x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
+  df_epsilon_new = df_epsilon %>% filter(date > x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
   
   if(nrow(df_epsilon_new)==0){
     return(series_optimal_forecast(x,h))
   }
   
   last_g = x$g[[length(x$g)]]
-  last_epsilon = x$df.fitted$spx[[length(x$g)]]
+  print(names(last_epsilon))
+  last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
   df_g_new = double(length(df_epsilon_new$date))
   
   for(i in 1:length(df_epsilon_new$date)){
     df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
     last_g = df_g_new[[i]]
-    last_epsilon = df_epsilon_new$spx[[i]]
+    last_epsilon = df_epsilon_new[[main_index]][i]
   }
   
   forecast_list = 1:h
@@ -275,7 +276,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
   quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
   
   res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
-  res$date = res$date %>% as_date()
+  #res$date = res$date %>% as_date()
   
   return(res)
 
