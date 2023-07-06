@@ -73,7 +73,7 @@ import_spx <- function() {
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
   
   df_spx = fortify.zoo(spx.ret)
-  df_spx = dplyr::rename(df_spx, c("date" = "Index", "spx" = "Close"))
+  df_spx = dplyr::rename(df_spx, c("date" = "Index", "value" = "Close"))
   
   return(df_spx)
 }
@@ -89,7 +89,7 @@ import_ndx <- function() {
   ndx.ret = 100 * diff(log(ndx.raw)) #stationary times series
   
   df_ndx = fortify.zoo(ndx.ret)
-  df_ndx = dplyr::rename(df_ndx, c("date" = "Index", "ndx" = "Close")) %>% as_tibble()
+  df_ndx = dplyr::rename(df_ndx, c("date" = "Index", "value" = "Close"))
   
   return(df_ndx)
 }
