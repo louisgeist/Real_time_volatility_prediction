@@ -3,9 +3,10 @@ source("./data_import_tools.R")
 
 # NB : df_xx are standardized : one column is "date" and the other one is called "xx" and contains the stationary time series
 
-#-------- S&P500 ---------
+#-------- S&P500 & NASDAQ (main indexes) ---------
 
 df_spx = import_spx()
+df_ndx = import_ndx()
 
 #---- External variables ------
 
