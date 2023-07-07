@@ -130,8 +130,7 @@ simulate_garchmidas <- function(x, h) {
   #   print(th)
   #   date[i] = th
   # }
-  
-  print(list_epsilon)
+
   df_simulation = as_tibble(as.data.frame(cbind(list_epsilon, list_g, list_tau, list_residuals))) %>% dplyr::rename(
     c(
       "epsilon" = "list_epsilon",
@@ -194,9 +193,10 @@ point_optimal_forecast <-
     gamma = x$par["gamma"][[1]]
     
     last_g = x$g[c(length(x$g))]
-    last_epsilon = x$df.fitted$spx[[length(x$df.fitted$spx)]]
+    last_epsilon = x$df.fitted[[main_index]][[length(x$df.fitted[[main_index]])]]
     last_tau = x$tau[[length(x$tau)]]
     
+
     next_g = next_g_func(alpha, beta, gamma, last_epsilon, last_tau, last_g) # g_1,t+1|t
     
     opt_forecast = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (h - 1) * (next_g - 1))
@@ -213,21 +213,26 @@ series_optimal_forecast <- function(x, h) { # makes the predictions for the next
   gamma = x$par["gamma"][[1]]
   
   last_g = x$g[[length(x$g)]]
-  last_epsilon = x$df.fitted$spx[[length(x$df.fitted$spx)]]
+  last_epsilon = x$df.fitted[[main_index]][[length(x$df.fitted[[main_index]])]]
   last_tau = x$tau[[length(x$tau)]]
   
+
   quoted_days = seq_quotation_date(x$df.fitted$date[[length(x$df.fitted$date)]], h)[-c(1)] # list of days where we want to do a forecast
   
   forecast_list = 1:h
-  
+
   df = adply(
     forecast_list,
     .margins = c(1),
     .fun = function(h)
       point_optimal_forecast(x, h)
-  ) %>% dplyr::rename(c("forecast" = "V1")) %>%
+  ) 
+
+  df = df %>% dplyr::rename(c("forecast" = "V1")) %>%
     mutate(horizon = as.numeric(X1)) %>% 
     select(c("horizon","forecast"))
+  
+  
   
   tib = as_tibble(df)
   tib$date = quoted_days
@@ -248,11 +253,14 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
   if(is.null(df_epsilon)){
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
-  df_epsilon_new = df_epsilon %>% filter(date > x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
   
+  df_epsilon_new = df_epsilon %>% filter(date > x$df.fitted$date[[length(x$df.fitted$date)]]) %>% as_tibble()
+
+
   if(nrow(df_epsilon_new)==0){
     return(series_optimal_forecast(x,h))
   }
+
   
   last_g = x$g[[length(x$g)]]
   last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
