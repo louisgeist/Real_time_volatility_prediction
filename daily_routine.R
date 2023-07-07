@@ -10,7 +10,7 @@ library(alfred)
 library(mfGARCH)
 library(rugarch)
 
-main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
+main_index = "ndx" # "spx" or "ndx" are the main index which are currently avaible
 
 # ----- 1. Data import -----
 source("./data_import.R")
@@ -23,21 +23,18 @@ source("./forecast.R")
 h = 80
 
 # GARCH-MIDAS models
-GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22","GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci")
+GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci")
 
 for(model in GM_models_list){
 
-  print(model)
   new_forecast = real_time_optimal_forecast(get(model),h, df_main_index) %>% select("date","forecast") %>% dplyr::rename(!!model := "forecast")
-  print(names(new_forecast))
-  
-  
   if(model == GM_models_list[[1]] ){
     df_forecast = new_forecast 
   } else{
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
   }
 }
+
 df_forecast = df_forecast %>% mutate(date = as.Date(date))
 
 # GARCH11
