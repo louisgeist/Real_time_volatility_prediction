@@ -17,18 +17,12 @@ GARCH11 = ugarchfit(spec_garch, df_main_index[,2] %>% as.data.frame() )
 
 # forecast_bootstrap = ugarchboot(GARCH11, method = c("Partial", "Full")[1], n.ahead = 30)
 
-# results display
-# model
-# forecast_bootstrap
-
-# plot(model@fit[["sigma"]], type = "l", ylab = "Sigma")
-
 
 # ----- GARCH-MIDAS with one explanatory variable --------
 ## ----- Daily explanatory variables (VIX, Rvol22, vrp) -----
 
 ## s&p explained by vix
-df = merge(df_main_index, df_vix, by = "date")
+df = df_main_index %>% merge(df_vix, by = "date")
 GM_vix = mfGARCH::fit_mfgarch(
   data = df,
   y = main_index,
@@ -40,7 +34,7 @@ GM_vix = mfGARCH::fit_mfgarch(
 # plot_weighting_scheme(GM_sp_vix)
 
 ## s&p explained by Rvol22
-df = merge(df_main_index, df_Rvol22, by = "date")
+df = df_main_index %>% merge(df_Rvol22, by = "date")
 GM_Rvol22 = mfGARCH::fit_mfgarch(
   data = df,
   y = main_index,
@@ -51,7 +45,7 @@ GM_Rvol22 = mfGARCH::fit_mfgarch(
 )
 
 ## s&p explained by vrp
-df = merge(df_main_index, df_vrp, by = "date")
+df = df_main_index %>%merge(df_vrp, by = "date")
 GM_vrp = mfGARCH::fit_mfgarch(
   data = df,
   y = main_index,
