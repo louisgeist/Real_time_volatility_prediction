@@ -255,7 +255,6 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL){ # makes the pre
   }
   
   last_g = x$g[[length(x$g)]]
-  print(names(last_epsilon))
   last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
   df_g_new = double(length(df_epsilon_new$date))
   
