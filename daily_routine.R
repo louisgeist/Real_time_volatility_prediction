@@ -38,7 +38,7 @@ for(model in GM_models_list){
     df_forecast = df_forecast %>% merge(new_forecast, by = "date")
   }
 }
-
+df_forecast = df_forecast %>% mutate(date = as.Date(date))
 
 # GARCH11
 forecast_garch11  = ugarchforecast(GARCH11, n.ahead = h)@forecast$sigmaFor
