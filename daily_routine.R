@@ -10,7 +10,7 @@ library(alfred)
 library(mfGARCH)
 library(rugarch)
 
-main_index = "ndx" # "spx" or "ndx" are the main index which are currently avaible
+main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
 
 # ----- 1. Data import -----
 source("./data_import.R")
