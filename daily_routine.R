@@ -40,7 +40,7 @@ df_forecast = df_forecast %>% mutate(date = as.Date(date))
 # GARCH11
 forecast_garch11  = ugarchforecast(GARCH11, n.ahead = h)@forecast$sigmaFor
 
-df_forecast = df_forecast %>% bind_cols(forecast_garch11[,1]) 
+df_forecast = df_forecast %>% dplyr::bind_cols(forecast_garch11[,1]) 
 df_forecast = df_forecast %>% dplyr::rename("GARCH11" = paste0("...", length(df_forecast)))
 
 
