@@ -11,6 +11,7 @@ library(mfGARCH)
 library(rugarch)
 
 main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
+final_date = today()
 
 # ----- 1. Data import -----
 source("./data_import.R")

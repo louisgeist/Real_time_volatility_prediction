@@ -68,6 +68,7 @@ import_spx <- function() {
     get.hist.quote(
       instrument = "^GSPC",
       start = as.Date("1971-01-01"),
+      end = final_date,
       quote = "Close"
     )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -84,6 +85,7 @@ import_ndx <- function() {
     get.hist.quote(
       instrument = "^NDX",
       start = as.Date("1971-01-01"),
+      end = final_date,
       quote = "Close"
     )
   ndx.ret = 100 * diff(log(ndx.raw)) #stationary times series
@@ -99,6 +101,7 @@ import_Rvol22 <- function() {
     get.hist.quote(
       instrument = "^GSPC",
       start = as.Date("1971-01-01"),
+      end = final_date,
       quote = "Close"
     )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -113,9 +116,10 @@ import_vix <- function() {
   vix.raw = get.hist.quote(
     instrument = "^VIX",
     start = as.Date("1990-01-01"),
+    end = final_date,
     quote = "Close"
   )
-  sum(is.na(vix.raw$Close)) #numbers of NA 1990 to 09/06/2023 : 299
+  sum(is.na(vix.raw$Close)) #numbers of NA 1990 to 09/06/2023 (for the s&p VIX): 299
   
   df_vix = fortify.zoo(vix.raw)
   df_vix = df_vix  %>% drop_na()
@@ -129,6 +133,7 @@ import_vrp <- function() {
   spx.raw = get.hist.quote(
     instrument = "^GSPC",
     start = as.Date("1971-01-01"),
+    end = final_date,
     quote = "Close"
   )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -152,9 +157,10 @@ import_houst <- function() {
     series_id = "HOUST",
     series_name = "HOUST",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today()),
+    realtime_start = final_date,
+    realtime_end = final_date,
     api_key = "4f77313cfd688a6d4d70ccf8e650f038"
-  ) %>% as_tibble()
+  )
   
   df_HOUST$value =  c(NA, 100 * diff(log(df_HOUST$HOUST)))
   
@@ -168,7 +174,8 @@ import_ip <- function() {
     series_id = "INDPRO",
     series_name = "IP",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today()),
+    realtime_start = final_date,
+    realtime_end = final_date,
     api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("date", "IP"))
   
@@ -183,7 +190,8 @@ import_nai <- function() {
     series_id = "CFNAI",
     series_name = "value",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today()),
+    realtime_start = final_date,
+    realtime_end = final_date,
     api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("date", "value"))
   
@@ -198,7 +206,8 @@ import_nfci <- function() {
     series_id = "NFCI",
     series_name = "value",
     observation_start = "1959-01-01",
-    realtime_start = ymd(today()),
+    realtime_start = final_date,
+    realtime_end = final_date,
     api_key = "4f77313cfd688a6d4d70ccf8e650f038"
   ) %>% as_tibble() %>% select(c("value", "date")) %>% mutate(date = date - 4) # we do this transformation, because the value of the friday corresponds to the week ending at that friday
     
