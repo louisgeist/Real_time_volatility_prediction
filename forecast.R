@@ -263,9 +263,34 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
   } # so there is data available that has not been used in the estimation part,  that we can use now :
   
   
-  # TAU computations (that have not been used in the estimation part)
-  if(nrow(df_long_term1_new) == 0){
-    tau_for_forecast = x$tau.forecast
+  # TAU computations (that have not been used in the estimation part) & g's
+  if(nrow(df_long_term1_new) == 0){ # on a pas de nouvelle période "longue", mais que des petites, donc on calcule toutes les nouvelles valeurs de g avec tau.forecast
+    
+    last_g = x$g[[length(x$g)]]
+    last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
+    df_g_new = double(length(df_epsilon_new$date))
+    
+    for(i in 1:length(df_epsilon_new$date)){
+      df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
+      last_g = df_g_new[[i]]
+      last_epsilon = df_epsilon_new[[main_index]][i]
+    }
+    
+    forecast_list = 1:h
+    list_opt_forecast = double(h)
+    next_g = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
+    
+    for(i in forecast_list){
+      list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+    }
+    
+    quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
+    
+    res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
+    #res$date = res$date %>% as_date()
+    
+    return(res)
+    
   } else{ 
     K = x$K
     
@@ -299,41 +324,60 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         tail(K)
       
       df_tau_new$value[[i]] = exp(x$par[["m"]] + sum(last_Z$value * pi))
-      
     }
-  }
-  
-  # period between estimation and forecast : computation of the g's
-  last_g = x$g[[length(x$g)]]
-  last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
-  df_g_new = double(length(df_epsilon_new$date))
-  
-  for(i in 1:length(df_epsilon_new$date)){
     
-    current_month = floor_date(df_epsilon_new$date[[i]],unit="month")
-    tau = df_tau_new[df_tau_new$year_month == current_month, "value"]$value[[1]] #recovers the calculated tau for the g's computation
+    line = data.frame(year_month = x$df.fitted[["year_month"]][[length(x$df.fitted[["year_month"]])]], value = x$df.fitted[["tau"]][[length(x$df.fitted[["year_month"]])]])
+    df_tau_new = df_tau_new %>% bind_rows(line)
+   
+    # period between estimation and forecast : computation of the g's
+    last_g = x$g[[length(x$g)]]
+    last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
+    df_g_new = double(length(df_epsilon_new$date))
     
-    df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
-    last_g = df_g_new[[i]]
-    last_epsilon = df_epsilon_new[[main_index]][i]
-  }
-  
-  # forecast :
-  forecast_list = 1:h
-  list_opt_forecast = double(h)
-  next_g = next_g_func(alpha, beta, gamma, last_epsilon, x$tau.forecast, last_g)
-  
-  for(i in forecast_list){
-    list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
-  }
-  
-  quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
-  
-  res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
-  #res$date = res$date %>% as_date()
-  
-  return(res)
 
+    for(i in 1:length(df_epsilon_new$date)){
+      
+      current_month = floor_date(df_epsilon_new$date[[i]],unit="month")
+      
+      
+      
+      tau = df_tau_new$value[[length(df_tau_new$value)]] # we hold tau constant for future values of tau
+      
+      matching_rows = df_tau_new$year_month == current_month
+      if(any(matching_rows)){
+        tau = df_tau_new$value[matching_rows][[1]]
+      }
+      
+      
+      df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
+      
+      last_g = df_g_new[[i]]
+      last_epsilon = df_epsilon_new[[main_index]][i]
+    }
+    
+    # forecast :
+    forecast_list = 1:h
+    list_opt_forecast = double(h)
+    next_g = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
+    
+    for(i in forecast_list){
+      list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+    }
+    
+    quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
+    
+    res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
+    #res$date = res$date %>% as_date()
+    
+    print(df_tau_new$value[[1]])
+    print(x$tau.forecast)
+    
+    return(res)
+    
+     
+  }
+  
+  
 }
 
 
