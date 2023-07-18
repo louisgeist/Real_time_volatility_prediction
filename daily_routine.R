@@ -28,7 +28,26 @@ GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix",
 
 for(model in GM_models_list){
 
-  new_forecast = real_time_optimal_forecast(get(model),h, df_main_index) %>% select("date","forecast") %>% dplyr::rename(!!model := "forecast")
+  # recover of the explanatory variables
+  var_names = strsplit(model, "_", fixed = TRUE)[[1]]
+  
+  if(length(var_names)==2){ # 1 explanatory variable
+    print("fd")
+    new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[2]])))
+    
+    
+  }else if(length(var_names)==3){# 2 explanatory variables
+    print("fdnof")
+    new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[3]])), df_long_term2 = get(paste0("df_",var_names[[2]])))
+  }else{
+    print(paste0("Model name : ", model))
+    stop("The model name is not in the correct form.")
+  }
+
+  new_forecast = new_forecast %>% 
+    select("date","forecast") %>% 
+    dplyr::rename(!!model := "forecast")
+  
   if(model == GM_models_list[[1]] ){
     df_forecast = new_forecast 
   } else{
