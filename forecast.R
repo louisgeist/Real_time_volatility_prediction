@@ -258,7 +258,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
   df_epsilon_new = df_epsilon %>% filter(date > x$df.fitted$date[[length(x$df.fitted$date)]])
   df_long_term1_new = df_long_term1 %>% filter(date > x$df.fitted$date[[length(x$df.fitted$date)]])
   
-  if(nrow(df_epsilon_new)==0){
+  if(nrow(df_epsilon_new)==0){# it means we have estimated the model with all the available data
     return(series_optimal_forecast(x,h))
   } # so there is data available that has not been used in the estimation part,  that we can use now :
   
@@ -291,8 +291,11 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
     
     return(res)
     
-  } else{ 
+  } else{
     K = x$K
+    if(!is.null(df_long_term2)){
+      K.two = x$K.two
+    }
     
     phi = function(l){ # computation of the weighting scheme
       if(x$weighting.scheme == "beta.resctricted"){
@@ -308,10 +311,33 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
       
       return(numerator/denominator)
     }
+    
     pi = x$par[["theta"]] * aaply(1:K, .margins = c(1), .fun = phi) #weights computation
     
-    ### ---- disjunction of cases according to the frequency of the long-term variable ----
-    if(length(colnames(df_long_term1))==2){ # case of the long term variable is daily
+    
+    
+    if(!is.null(df_long_term2)){
+      phi = function(l){ # computation of the weighting scheme
+        if(x$weighting.scheme.two == "beta.restricted"){
+          w1 = 1
+          w2 = x$par[["w2.two"]]
+        } else{ # this case is normally not possible, because of mfGARCH specificities
+          w1 = x$par[["w1.two"]]
+          w2 = x$par[["w2.two"]]
+        }
+        
+        numerator = (l/(K+1))^(w1-1) * (1- l/(K+1))^(w2-1)
+        denominator = adply(1:K, .margins = c(1), .fun = function(j) (j/(K+1))^(w1-1) * (1- j/(K+1))^(w2-1))$V1 %>% sum()
+        
+        return(numerator/denominator)
+      }
+      pi.two = x$par[["theta.two"]] * aaply(1:K, .margins = c(1), .fun = phi) #weights computation
+    }
+    
+    # ---- disjunction of cases according to the frequency of the long-term variable ----
+    
+    ## ---- Daily long term variable ----
+    if(length(colnames(df_long_term1))==2){
       
       #create the future df that will store the computed tau, the goal is the have the correct dates here
       df_tau_new = df_long_term1_new %>% 
@@ -370,53 +396,115 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
       print(x$tau.forecast)
       
       return(res)
+      
+      ## ---- Monthly long term variable ----
     }else{
       if(colnames(df_long_term1)[[3]]=="year_month"){
         
-        #create the future df that will store the computed tau, the goal is the have the correct year_month here
-        df_tau_new = df_long_term1_new %>% 
-          subset(!duplicated(year_month)) %>% 
-          select("year_month")
-        df_tau_new$value = NA
-        
-        #compute of the new values of tau
-        for(i in seq_along(df_tau_new$year_month)){
-          last_Z = df_long_term1 %>%
-            subset(!duplicated(year_month)) %>%
-            filter(year_month < df_tau_new$year_month[[i]] ) %>%
-            tail(K)
-          
-          df_tau_new$value[[i]] = exp(x$par[["m"]] + sum(last_Z$value * pi))
-        }
-        
-        line = data.frame(year_month = x$df.fitted[["year_month"]][[length(x$df.fitted[["value"]])]], value = x$df.fitted[["tau"]][[length(x$df.fitted[["value"]])]])
-        df_tau_new = df_tau_new %>% bind_rows(line)
-        
-        # period between estimation and forecast : computation of the g's
-        last_g = x$g[[length(x$g)]]
-        last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
-        df_g_new = double(length(df_epsilon_new$date))
-        
-        
-        for(i in 1:length(df_epsilon_new$date)){
-          
-          current_month = floor_date(df_epsilon_new$date[[i]],unit="month")
+        if(is.null(df_long_term2)){
           
           
+          #create the future df that will store the computed tau, the goal is to have the correct year_month here
+          df_tau_new = df_long_term1_new %>% 
+            subset(!duplicated(year_month)) %>% 
+            select("year_month")
+          df_tau_new$value = NA
           
-          tau = df_tau_new$value[[length(df_tau_new$value)]] # we hold tau constant for future values of tau
-          
-          matching_rows = df_tau_new$year_month == current_month
-          if(any(matching_rows)){
-            tau = df_tau_new$value[matching_rows][[1]]
+          #compute of the new values of tau
+          for(i in seq_along(df_tau_new$year_month)){
+            last_Z = df_long_term1 %>%
+              subset(!duplicated(year_month)) %>%
+              filter(year_month < df_tau_new$year_month[[i]] ) %>%
+              tail(K)
+            
+            df_tau_new$value[[i]] = exp(x$par[["m"]] + sum(last_Z$value * pi))
           }
           
           
-          df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
           
-          last_g = df_g_new[[i]]
-          last_epsilon = df_epsilon_new[[main_index]][i]
+          
+          line = data.frame(year_month = x$df.fitted[["year_month"]][[length(x$df.fitted[["value"]])]], value = x$df.fitted[["tau"]][[length(x$df.fitted[["value"]])]])
+          df_tau_new = df_tau_new %>% bind_rows(line)
+          
+          # period between estimation and forecast : computation of the g's
+          last_g = x$g[[length(x$g)]]
+          last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
+          df_g_new = double(length(df_epsilon_new$date))
+          
+          
+          for(i in 1:length(df_epsilon_new$date)){
+            
+            current_month = floor_date(df_epsilon_new$date[[i]],unit="month")
+            
+            
+            
+            tau = df_tau_new$value[[length(df_tau_new$value)]] # we hold tau constant for future values of tau
+            
+            matching_rows = df_tau_new$year_month == current_month
+            if(any(matching_rows)){
+              tau = df_tau_new$value[matching_rows][[1]]
+            }
+            
+            
+            df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
+            
+            last_g = df_g_new[[i]]
+            last_epsilon = df_epsilon_new[[main_index]][i]
+          }
+          
+        }else{# df_long_term2 is NOT null (-> there is the daily VIX in the tau)
+          
+          df_expl_var = df_long_term1 %>% merge(df_long_term2, by = "date")
+          
+          df_tau_new = df_expl_var %>% select("date")
+          df_tau_new$value = NA
+          
+          # compute of new taus
+          for(i in seq_along(df_tau_new$date)){
+            last_Z = df_expl_var %>%
+              filter(date < df_tau_new$date[[i]] ) %>%
+              tail(max(K,K.two))
+            
+            last_Z1 = last_Z %>% tail(K)
+            last_Z2 = last_Z %>% tail(K.two)
+            
+            df_tau_new$value[[i]] = exp(x$par[["m"]] + sum(last_Z1$value * pi) + sum(last_Z2$value * pi.two))
+          }
+          
+          #line = data.frame(year_month = x$df.fitted[["year_month"]][[length(x$df.fitted[["value"]])]], value = x$df.fitted[["tau"]][[length(x$df.fitted[["value"]])]])
+          #df_tau_new = df_tau_new %>% bind_rows(line)
+          
+          # period between estimation and forecast : computation of the g's
+          last_g = x$g[[length(x$g)]]
+          last_epsilon = x$df.fitted[[main_index]][[length(x$g)]]
+          df_g_new = double(length(df_epsilon_new$date))
+          
+          
+          for(i in 1:length(df_epsilon_new$date)){
+            
+            tau = df_tau_new$value[[length(df_tau_new$value)]] # we hold tau constant for future values of tau
+            
+            matching_rows = df_tau_new$date == df_epsilon_new$date[[i]]
+            if(any(matching_rows)){
+              tau = df_tau_new$value[matching_rows][[1]]
+            }
+            
+            
+            df_g_new[[i]] = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
+            
+            last_g = df_g_new[[i]]
+            last_epsilon = df_epsilon_new[[main_index]][i]
+          }
+          
+          
+          
         }
+        
+        
+        
+        
+        
+        
         
         # forecast :
         forecast_list = 1:h
@@ -432,14 +520,18 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
         #res$date = res$date %>% as_date()
         
-        print(df_tau_new$value[[1]])
+        print(df_tau_new$value)
         print(x$tau.forecast)
         
         return(res)
         
-      }else{ #year_week case 
         
         
+        
+        
+        
+      ## ---- Weekly long term variable ----
+      }else{
         
         #create the future df that will store the computed tau, the goal is the have the correct year_month here
         df_tau_new = df_long_term1_new %>% 
@@ -500,7 +592,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
         res$date = res$date %>% as_date()
         
-        print(df_tau_new$value[[1]])
+        print(df_tau_new$value)
         print(x$tau.forecast)
         
         return(res)
@@ -509,6 +601,5 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
     }
      
   }
-  
   
 }
