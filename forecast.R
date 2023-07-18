@@ -287,7 +287,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
     quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
     
     res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
-    #res$date = res$date %>% as_date()
+    res$date = res$date %>% as_date()
     
     return(res)
     
@@ -312,9 +312,8 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
       return(numerator/denominator)
     }
     
-    pi = x$par[["theta"]] * aaply(1:K, .margins = c(1), .fun = phi) #weights computation
-    
-    
+    pi = rev(x$par[["theta"]] * adply(1:K, .margins = c(1), .fun = phi)$V1 ) #weights computation
+
     
     if(!is.null(df_long_term2)){
       phi = function(l){ # computation of the weighting scheme
@@ -331,7 +330,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         
         return(numerator/denominator)
       }
-      pi.two = x$par[["theta.two"]] * aaply(1:K, .margins = c(1), .fun = phi) #weights computation
+      pi.two = rev(x$par[["theta.two"]] * adply(1:K, .margins = c(1), .fun = phi)$V1) #weights computation
     }
     
     # ---- disjunction of cases according to the frequency of the long-term variable ----
@@ -392,12 +391,9 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
       res = as.data.frame(cbind(quoted_days, list_opt_forecast)) %>% as_tibble() %>% dplyr::rename(c("date" = "quoted_days", "forecast" = "list_opt_forecast"))
       #res$date = res$date %>% as_date()
       
-      print(df_tau_new$value[[1]])
-      print(x$tau.forecast)
-      
       return(res)
       
-      ## ---- Monthly long term variable ----
+    ## ---- Monthly long term variable ----
     }else{
       if(colnames(df_long_term1)[[3]]=="year_month"){
         
@@ -419,7 +415,6 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
             
             df_tau_new$value[[i]] = exp(x$par[["m"]] + sum(last_Z$value * pi))
           }
-          
           
           
           
@@ -523,8 +518,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         
         return(res)
         
-        
-        
+      
         
         
         
