@@ -32,12 +32,10 @@ for(model in GM_models_list){
   var_names = strsplit(model, "_", fixed = TRUE)[[1]]
   
   if(length(var_names)==2){ # 1 explanatory variable
-    print("fd")
     new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[2]])))
     
     
   }else if(length(var_names)==3){# 2 explanatory variables
-    print("fdnof")
     new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[3]])), df_long_term2 = get(paste0("df_",var_names[[2]])))
   }else{
     print(paste0("Model name : ", model))
