@@ -8,6 +8,10 @@ source("./data_import_tools.R")
 df_spx = import_spx()
 df_ndx = import_ndx()
 
+# ----- adaptation to the main chosen index
+df_main_index = get(paste0("df_",main_index)) %>%
+  dplyr::rename(!!main_index := "value")
+
 #---- External variables ------
 
 ## ----- Daily measures of financial risk -----

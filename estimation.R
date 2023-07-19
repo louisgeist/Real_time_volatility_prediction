@@ -2,10 +2,6 @@
 # 1. data_import.R should be runned before running this script
 # 2. main_index should be a string containing the name of a valid index
 
-# ----- adaptation to the main chosen index
-df_main_index = get(paste0("df_",main_index)) %>%
-  dplyr::rename(!!main_index := "value")
-
 
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
