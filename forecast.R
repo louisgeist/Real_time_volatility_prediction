@@ -383,7 +383,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
       next_g = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
       
       for(i in forecast_list){
-        list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+        list_opt_forecast[[i]] = tau * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
       }
       
       quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
@@ -445,6 +445,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
             
             last_g = df_g_new[[i]]
             last_epsilon = df_epsilon_new[[main_index]][i]
+            
           }
           
         }else{# df_long_term2 is NOT null (-> there is the daily VIX in the tau)
@@ -497,17 +498,14 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         
         
         
-        
-        
-        
-        
         # forecast :
         forecast_list = 1:h
         list_opt_forecast = double(h)
         next_g = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
         
+        
         for(i in forecast_list){
-          list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+          list_opt_forecast[[i]] = tau * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
         }
         
         quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
@@ -623,7 +621,7 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
         next_g = next_g_func(alpha, beta, gamma, last_epsilon, tau, last_g)
         
         for(i in forecast_list){
-          list_opt_forecast[[i]] = x$tau.forecast * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
+          list_opt_forecast[[i]] = tau * (1 + (alpha + gamma / 2 + beta) ** (i - 1) * (next_g - 1))
         }
         
         quoted_days = seq_quotation_date(df_epsilon_new$date[[length(df_epsilon_new$date)]], h)[-c(1)] # list of days where we want to do a forecast
