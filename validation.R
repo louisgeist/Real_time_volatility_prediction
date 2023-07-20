@@ -27,8 +27,8 @@ filter_data = function(last_date) {
   df_Rvol22 <<- df_Rvol22_raw %>% filter(date < last_date)
 }
 
-qlike <- function(h,sigma){
-  return(log(h**2)+ (sigma/h)**2)
+qlike <- function(h,sigma_square){
+  return(sigma_square/h -log( sigma_square / h) - 1)
 }
 
 
@@ -57,54 +57,72 @@ source("./estimation.R")
 
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
-realized_library = read.csv(file = "./realized_library.csv")
 
-n_forecasts = 5
 
+n_forecasts = 1 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts) # function implemented in forecast.R
+
+
+## --- Test set ---
+realized_library = read.csv(file = "./realized_library.csv") %>% 
+  select(c("date","rv5")) %>% 
+  mutate(date = ymd(date))
+
+df_date_to_forecast = data.frame(date = date_to_forecast) %>% 
+  merge(realized_library, by = "date")
+
+## --- Forecasts on the test set ---
 
 h = 1 # one day forecast
 
-# GARCH-MIDAS models
+### ---- GARCH-MIDAS models part ------
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci")
 
 
-error_dhoust = double(n_forecasts)
+error_container <- list()
+for (model in GM_models_list) {
+  error_container[[model]] <- double(h)
+}
+
+
+Rprof(interval = 0.05)
+
 for(i in seq_along(date_to_forecast)){
-  print(date_to_forecast)
+  print(date_to_forecast[[i]])
   
-  filter_data(ymd(date_to_forecast[[i]]))
+  filter_data(ymd(date_to_forecast[[i]])) # data available until the previous day of forecast (because we forecast at horizon 1 at the moment)
   
-  print(df_main_index %>% tail(1))
+  real_volatility = df_date_to_forecast$rv5[[i]] * 10**4 #beacause we have multiplied the returns by 10**2 #as.Date(current_date)
   
-  error_dhoust[[i]] = real_time_optimal_forecast(GM_dhoust, h, df_main_index, df_dhoust)$forecast[[1]]
-  
-}
-
-error_dhoust
-
-# old functions
-for(model in GM_models_list){
-  
-  new_forecast = real_time_optimal_forecast(get(model),h, df_main_index) %>% select("date","forecast") %>% dplyr::rename(!!model := "forecast")
-  if(model == GM_models_list[[1]] ){
-    df_forecast = new_forecast 
-  } else{
-    df_forecast = df_forecast %>% merge(new_forecast, by = "date")
+  for(model in GM_models_list){
+    
+    # recover of the explanatory variables for the current model & forecast
+    var_names = strsplit(model, "_", fixed = TRUE)[[1]]
+    
+    if(length(var_names)==2){ # 1 explanatory variable
+      new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[2]])))
+      
+    }else if(length(var_names)==3){# 2 explanatory variables
+      new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[3]])), df_long_term2 = get(paste0("df_",var_names[[2]])))
+      
+    }else{
+      print(paste0("Model name : ", model))
+      stop("The model name is not in the correct form.")
+    }
+    
+    # error computation
+    error_container[[model]][[i]] = qlike(new_forecast$forecast[[1]], real_volatility)
   }
+  
+  #df_error = data.frame(date = date_to_forecast, GM_dhoust = error_dhoust)
 }
 
-df_forecast = df_forecast %>% mutate(date = as.Date(date))
+Rprof(NULL)
 
-# GARCH11
-forecast_garch11  = ugarchforecast(GARCH11, n.ahead = h)@forecast$sigmaFor
 
-df_forecast = df_forecast %>% dplyr::bind_cols(forecast_garch11[,1]) 
-df_forecast = df_forecast %>% dplyr::rename("GARCH11" = paste0("...", length(df_forecast)))
 
-# ------ 4. Validation -------
-# use of 
 
-realized_library = read.csv(file = "./realized_library.csv")
 
-# compute of the error estimation of for one model !
+realized_library$rv5 * 10**4 %>% tail()
+
+
