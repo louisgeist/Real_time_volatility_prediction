@@ -28,7 +28,7 @@ GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix",
 
 for(model in GM_models_list){
 
-  # recover of the explanatory variables
+  # recover of the explanatory variables for the current model
   var_names = strsplit(model, "_", fixed = TRUE)[[1]]
   
   if(length(var_names)==2){ # 1 explanatory variable
