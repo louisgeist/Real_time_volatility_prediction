@@ -92,7 +92,7 @@ for(i in seq_along(date_to_forecast)){
   
   filter_data(ymd(date_to_forecast[[i]])) # data available until the previous day of forecast (because we forecast at horizon 1 at the moment)
   
-  real_volatility = df_date_to_forecast$rv5[[i]] * 10**4 #beacause we have multiplied the returns by 10**2 #as.Date(current_date)
+  real_volatility = df_date_to_forecast$rv5[[i]] * 10**4 #because we have multiplied the returns by 10**2 #as.Date(current_date)
   
   for(model in GM_models_list){
     
