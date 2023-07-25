@@ -2,36 +2,27 @@
 # forecast function rely on the "mfGARCH" package
 library(timeDate)
 
+
 ## ----- general useful function for forecast -----
 next_g_func <- function(alpha, beta, gamma, epsilon, tau, g) {
   return((1 - alpha - gamma / 2 - beta) + (alpha + gamma * as.numeric(epsilon < 0)) *
            (epsilon ** 2) / tau + beta * g)
 }
 
+
 seq_quotation_date = function(initial_date, h) {
-  #returns h+1 next quoted days after the initial date
-  # initial_date : date
-  # h : integer, for the horizon
+
+  list_days = seq(initial_date, initial_date + days(2 * h + 5), by = "day")
   
-  list_days = seq(initial_date, initial_date + 2 * h + 5, by = "day")
+  unique_years = year(list_days) %>% unique()
   
-  unique_years = lubridate::year(list_days) %>% as.data.frame() %>% dplyr::rename(c("year" = ".")) %>% distinct(year)
-  holiday = c()
-  for (y in unique_years$year) {
-    holiday = c(holiday, ymd(timeDate::holidayNYSE(year = y)))
-  }
+  all_holidays = sapply(unique_years, function(y) ymd(holidayNYSE(year = y)))
+
+  all_holidays_vec = unlist(all_holidays) # concatène dans un unique vecteur
   
-  quoted_days = c()
-  for (date in list_days) {
-    if ((wday(as_date(date)) %in% seq(2, 6)) &
-        (1 - (date %in% holiday))) {
-      quoted_days[c(length(quoted_days) + 1)] = date
-      
-    }
-  }
+  quoted_days = list_days[wday(list_days) %in% 2:6 & !(list_days %in% all_holidays_vec)]
   
-  quoted_days = quoted_days %>% as_date()
-  return(quoted_days[c(seq(1:(h + 1)))])
+  return(quoted_days[1:(h + 1)])
 }
 
 ## ----- bootstrap forecast -----
