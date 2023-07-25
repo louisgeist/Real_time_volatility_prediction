@@ -13,18 +13,28 @@ library(rugarch)
 # General paramaters (for the data download & estimation)
 main_index = "spx"
 
-# ----- 0. Tool ------ 
-filter_data = function(last_date) {
-  # watch out, it affects global variables
-  df_main_index <<- df_main_index_raw %>% filter(date < last_date)
+# ----- 0.Tool ------ 
+filter_data = function(last_date, df_main_index_raw, df_dhoust_raw, df_ip_raw, df_nai_raw, df_nfci_raw, df_vix_raw, df_vrp_raw, df_Rvol22_raw) {
+  # Find the index where the condition is true
+  index_main_index <- which(df_main_index_raw$date < last_date)
+  index_dhoust <- which(floor_date(df_dhoust_raw$date, unit = "month") < floor_date(last_date, unit = "month"))
+  index_ip <- which(floor_date(df_ip_raw$date, unit = "month") < floor_date(last_date, unit = "month"))
+  index_nai <- which(floor_date(df_nai_raw$date, unit = "month") < floor_date(last_date, unit = "month"))
+  index_nfci <- which(floor_date(df_nfci_raw$date, unit = "week", 5) < floor_date(last_date, unit = "week", 5))
+  index_vix <- which(df_vix_raw$date < last_date)
+  index_vrp <- which(df_vrp_raw$date < last_date)
+  index_Rvol22 <- which(df_Rvol22_raw$date < last_date)
   
-  df_dhoust <<- df_dhoust_raw %>% filter(floor_date(date, unit = "month") < floor_date(last_date,unit = "month"))
-  df_ip <<- df_ip_raw %>% filter(floor_date(date, unit = "month") < floor_date(last_date,unit = "month"))
-  df_nai <<- df_nai_raw %>% filter(floor_date(date, unit = "month") < floor_date(last_date,unit = "month"))
-  df_nfci <<- df_nfci_raw %>% filter(floor_date(date, unit = "week",5) < floor_date(last_date, unit = "week",5))
-  df_vix <<- df_vix_raw %>% filter(date < last_date)
-  df_vrp <<- df_vrp_raw %>% filter(date < last_date)
-  df_Rvol22 <<- df_Rvol22_raw %>% filter(date < last_date)
+  # Subset the DataFrames using the index
+  df_main_index <<- df_main_index_raw[index_main_index, ]
+  df_dhoust <<- df_dhoust_raw[index_dhoust, ]
+  df_ip <<- df_ip_raw[index_ip, ]
+  df_nai <<- df_nai_raw[index_nai, ]
+  df_nfci <<- df_nfci_raw[index_nfci, ]
+  df_vix  <<- df_vix_raw[index_vix, ]
+  df_vrp  <<- df_vrp_raw[index_vrp, ]
+  df_Rvol22  <<- df_Rvol22_raw[index_Rvol22, ]
+  
 }
 
 qlike <- function(h,sigma_square){
@@ -39,7 +49,7 @@ source("./data_import.R")
 # stable storage of the data
 df_main_index_raw <- df_main_index
 
-df_dhoust_raw <- df_dhoust
+df_dhoust_raw = df_dhoust
 df_ip_raw = df_ip
 df_nai_raw = df_nai
 df_nfci_raw = df_nfci
@@ -49,9 +59,10 @@ df_Rvol22_raw = df_Rvol22
 
 
 # ------ 2. Training ------
-
 date_end_training = ymd("2015-01-01")
-filter_data(date_end_training)
+
+filter_data(date_end_training, df_main_index_raw, df_dhoust_raw, df_ip_raw, df_nai_raw, df_nfci_raw, df_vix_raw, df_vrp_raw, df_Rvol22_raw)
+
 
 source("./estimation.R")
 
@@ -85,12 +96,14 @@ for (model in GM_models_list) {
 }
 
 
-Rprof(interval = 0.05)
+#Rprof(interval = 0.05)
+
+
 
 for(i in seq_along(date_to_forecast)){
   print(date_to_forecast[[i]])
   
-  filter_data(ymd(date_to_forecast[[i]])) # data available until the previous day of forecast (because we forecast at horizon 1 at the moment)
+  filter_data(ymd(date_to_forecast[[i]]), df_main_index_raw, df_dhoust_raw, df_ip_raw, df_nai_raw, df_nfci_raw, df_vix_raw, df_vrp_raw, df_Rvol22_raw)#data available until the previous day of forecast (because we forecast at horizon 1 at the moment)
   
   real_volatility = df_date_to_forecast$rv5[[i]] * 10**4 #because we have multiplied the returns by 10**2 #as.Date(current_date)
   
@@ -116,8 +129,9 @@ for(i in seq_along(date_to_forecast)){
   
   #df_error = data.frame(date = date_to_forecast, GM_dhoust = error_dhoust)
 }
+  
 
-Rprof(NULL)
+#Rprof(NULL)
 
 
 
