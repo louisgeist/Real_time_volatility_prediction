@@ -96,9 +96,7 @@ for (model in GM_models_list) {
 }
 
 
-#Rprof(interval = 0.05)
-
-
+Rprof(interval = 0.05)
 
 for(i in seq_along(date_to_forecast)){
   print(date_to_forecast[[i]])
@@ -131,12 +129,6 @@ for(i in seq_along(date_to_forecast)){
 }
   
 
-#Rprof(NULL)
-
-
-
-
-
-realized_library$rv5 * 10**4 %>% tail()
+Rprof(NULL)
 
 
