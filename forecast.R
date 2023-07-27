@@ -283,45 +283,13 @@ real_time_optimal_forecast <- function(x, h, df_epsilon = NULL, df_long_term1, d
     return(res)
     
   } else{
+    
     K = x$K
+    pi = rev(x$est.weighting)*x$par[["theta"]]
+    
     if(!is.null(df_long_term2)){
       K.two = x$K.two
-    }
-    
-    phi = function(l){ # computation of the weighting scheme
-      if(x$weighting.scheme == "beta.restricted"){
-        w1 = 1
-        w2 = x$par[["w2"]]
-      } else{
-        w1 = x$par[["w1"]]
-        w2 = x$par[["w2"]]
-      }
-      
-      numerator = (l/(K+1))^(w1-1) * (1- l/(K+1))^(w2-1)
-      denominator = adply(1:K, .margins = c(1), .fun = function(j) (j/(K+1))^(w1-1) * (1- j/(K+1))^(w2-1))$V1 %>% sum()
-      
-      return(numerator/denominator)
-    }
-    
-    pi = rev(x$par[["theta"]] * adply(1:K, .margins = c(1), .fun = phi)$V1 ) #weights computation
-
-    
-    if(!is.null(df_long_term2)){
-      phi = function(l){ # computation of the weighting scheme
-        if(x$weighting.scheme.two == "beta.restricted"){
-          w1 = 1
-          w2 = x$par[["w2.two"]]
-        } else{ # this case is normally not possible, because of mfGARCH specificities
-          w1 = x$par[["w1.two"]]
-          w2 = x$par[["w2.two"]]
-        }
-        
-        numerator = (l/(K+1))^(w1-1) * (1- l/(K+1))^(w2-1)
-        denominator = adply(1:K, .margins = c(1), .fun = function(j) (j/(K+1))^(w1-1) * (1- j/(K+1))^(w2-1))$V1 %>% sum()
-        
-        return(numerator/denominator)
-      }
-      pi.two = rev(x$par[["theta.two"]] * adply(1:K, .margins = c(1), .fun = phi)$V1) #weights computation
+      pi.two = rev(x$par[["theta.two"]] * x$est.weighting.two)
     }
     
     # ---- disjunction of cases according to the frequency of the long-term variable ----
