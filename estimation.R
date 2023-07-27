@@ -35,7 +35,7 @@ GM_Rvol22 = mfGARCH::fit_mfgarch(
   data = df,
   y = main_index,
   x = "value",
-  K = 264,
+  K = 264, #264 value in the paper -> but makes the optimizatoin & the forecasts after really slow :/
   low.freq = "date",
   weighting = "beta.restricted"
 )
