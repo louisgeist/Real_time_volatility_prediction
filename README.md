@@ -13,16 +13,16 @@ Real_time_volatility_prediction
 ├── daily_routine.R
 
 ├── .github/worflows
-    └─── produce_data_plot.uml
+    └── produce_data_plot.uml
 ├── data_plot/
-    ├─── 2023-06-26_forecasts.csv
-    ├─── 2023-06-26_training_data.csv
+    ├── 2023-06-26_forecasts.csv
+    ├── 2023-06-26_training_data.csv
     ...
-    └─── [today]_training_data.csv
+    └── [today]_training_data.csv
 
 ├── Rshiny
-    ├─── server.R
-    └─── ui.R
+    ├── server.R
+    └── ui.R
 
 ├── validation.R
 ├── qlike.error_analysis.R
