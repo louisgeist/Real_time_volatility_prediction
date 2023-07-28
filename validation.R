@@ -73,7 +73,7 @@ n_forecasts = 10 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts-1) # function implemented in forecast.R
 
 ## --- Forecasts on the test set ---
-h_list = c(1,5)
+h_list = c(1)
 h_max = max(h_list) # one day forecast
 
 ## --- Test set ---
@@ -150,16 +150,16 @@ for(i in seq_along(date_to_forecast)){
     }
     
     # error computation
-    for(h_index in seq_along(h_list)){
-      h = h_list[[h_index]]
-      error_array[model_index, i, h_index] = qlike(new_forecast$forecast[[h]], real_volatility[[h]])
-      #print(paste0("real_vol h : ", real_volatility[[h]]))
-    }
+    forecast_list <- new_forecast$forecast[h_list]
+    real_volatility_list <- real_volatility[h_list]
     
+    error_array[model_index, i, ] <- mapply(qlike, forecast_list, real_volatility_list)
     
   }
 }
 
 Rprof(NULL)
 
+
+summaryRprof("Rprof.out")
 
