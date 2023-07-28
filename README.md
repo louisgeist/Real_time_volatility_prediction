@@ -20,11 +20,12 @@ Real_time_volatility_prediction
     ...
     └─── [today]_training_data.csv
 
-├── validation.R
-├── qlike.error_analysis.R
 ├── Rshiny
     ├─── server.R
     └─── ui.R
+
+├── validation.R
+├── qlike.error_analysis.R
 
 ├── descriptive_statistics.R
 ├── qlike.R
