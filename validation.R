@@ -69,12 +69,12 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 10 #number of days for the test set
+n_forecasts = 100 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts-1) # function implemented in forecast.R
 
 ## --- Forecasts on the test set ---
-h_list = c(1)
-h_max = max(h_list) # one day forecast
+h_list = c(1,2,5,10,22,44,66) # NB : adding prediction horizons increases the following calculations only slightly
+h_max = max(h_list)
 
 ## --- Test set ---
 realized_library = read.csv(file = "./realized_library.csv") %>% 
@@ -82,15 +82,14 @@ realized_library = read.csv(file = "./realized_library.csv") %>%
   mutate(date = ymd(date))
 
 
-date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts+h_max-1)
+date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts+h_max+1)
 df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = date_to_forecast) but now with h>1, we need to add some more dates
   merge(realized_library, by = "date")
 
 
-
 ### ---- GARCH-MIDAS models part ------
-#GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") #GM_Rvol_22 -> temporarly removed because K=264 makes forecasting really two slow
-GM_models_list = c("GM_vix")
+#GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
+GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai")
 
 # build of error_array
 n_models <- length(GM_models_list)
@@ -139,10 +138,10 @@ for(i in seq_along(date_to_forecast)){
     var_names = strsplit(model, "_", fixed = TRUE)[[1]]
     
     if(length(var_names)==2){ # 1 explanatory variable
-      new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[2]])))
+      new_forecast = real_time_optimal_forecast(get(model),h_max, df_main_index, df_long_term1 = get(paste0("df_",var_names[[2]])))
       
     }else if(length(var_names)==3){# 2 explanatory variables
-      new_forecast = real_time_optimal_forecast(get(model),h, df_main_index, df_long_term1 = get(paste0("df_",var_names[[3]])), df_long_term2 = get(paste0("df_",var_names[[2]])))
+      new_forecast = real_time_optimal_forecast(get(model),h_max, df_main_index, df_long_term1 = get(paste0("df_",var_names[[3]])), df_long_term2 = get(paste0("df_",var_names[[2]])))
       
     }else{
       print(paste0("Model name : ", model))
@@ -160,6 +159,14 @@ for(i in seq_along(date_to_forecast)){
 
 Rprof(NULL)
 
-
 summaryRprof("Rprof.out")
+
+saveRDS(error_array, file = "./data_error_array/error_array.rds")
+
+# ---- 4. use of results ---
+source(file = "./qlike.error_analysis.R")
+
+error_array_analysis(error_array)
+
+
 
