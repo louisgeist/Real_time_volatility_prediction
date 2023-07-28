@@ -72,26 +72,36 @@ source("./forecast.R")
 n_forecasts = 10 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts-1) # function implemented in forecast.R
 
+## --- Forecasts on the test set ---
+h_list = c(1,5)
+h_max = max(h_list) # one day forecast
 
 ## --- Test set ---
 realized_library = read.csv(file = "./realized_library.csv") %>% 
   select(c("date","rv5")) %>% 
   mutate(date = ymd(date))
 
-df_date_to_forecast = data.frame(date = date_to_forecast) %>% 
+
+date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts+h_max-1)
+df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = date_to_forecast) but now with h>1, we need to add some more dates
   merge(realized_library, by = "date")
 
-## --- Forecasts on the test set ---
-h_lists = c(1,5)
-h = 1 # one day forecast
+
 
 ### ---- GARCH-MIDAS models part ------
 #GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") #GM_Rvol_22 -> temporarly removed because K=264 makes forecasting really two slow
 GM_models_list = c("GM_vix")
 
-error_container <- list()
-for (model in GM_models_list) {
-  error_container[[model]] <- double(h)
+# build of error_array
+n_models <- length(GM_models_list)
+n_dates <- length(date_to_forecast)
+
+error_array <- array(0, dim = c(n_models, n_dates, length(h_list)))
+
+for (i in seq_along(GM_models_list)) {
+  for (date in 1:n_dates) {
+    error_array[i, date, ] <- double(length(h_list))
+  }
 }
 
 
@@ -120,9 +130,10 @@ for(i in seq_along(date_to_forecast)){
               df_main_index_raw, df_dhoust_raw, df_ip_raw, df_nai_raw, df_nfci_raw, df_vix_raw, df_vrp_raw, df_Rvol22_raw
               ) #data available until the previous day of forecast (because we forecast at horizon 1 at the moment)
   
-  real_volatility = df_date_to_forecast$rv5[[i]] * 10**4 #because we have multiplied the returns by 10**2 #as.Date(current_date)
+  real_volatility <- df_date_to_forecast$rv5[i:(i+h_max-1)] * 10**4 #because we have multiplied the returns by 10**2 #as.Date(current_date)
   
-  for(model in GM_models_list){
+  for(model_index in seq_along(GM_models_list)){
+    model = GM_models_list[[model_index]]
     
     # recover of the explanatory variables for the current model & forecast
     var_names = strsplit(model, "_", fixed = TRUE)[[1]]
@@ -139,10 +150,14 @@ for(i in seq_along(date_to_forecast)){
     }
     
     # error computation
-    error_container[[model]][[i]] = qlike(new_forecast$forecast[[1]], real_volatility)
+    for(h_index in seq_along(h_list)){
+      h = h_list[[h_index]]
+      error_array[model_index, i, h_index] = qlike(new_forecast$forecast[[h]], real_volatility[[h]])
+      #print(paste0("real_vol h : ", real_volatility[[h]]))
+    }
+    
+    
   }
-  
-  #df_error = data.frame(date = date_to_forecast, GM_dhoust = error_dhoust)
 }
 
 Rprof(NULL)
