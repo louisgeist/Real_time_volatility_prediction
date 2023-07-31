@@ -1,6 +1,8 @@
 # uses the results of "validation.R"
 
 error_array_analysis <- function(error_array, GM_models_list, h_list){
+  print(paste0("Number of predictions per horizon and per model : ", dim(error_array)[[2]]))
+  
   # compute of the columns
   error_mean = aaply(error_array, c(1,3), .fun = mean)
   
@@ -27,5 +29,5 @@ error_array_analysis <- function(error_array, GM_models_list, h_list){
   
 }
 
-
-error_array_analysis(error_array, GM_models_list, h_list)
+#error_array <- readRDS(file = "./data_error_array/error_array.rds")
+#error_array_analysis(error_array, GM_models_list, h_list)
