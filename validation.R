@@ -69,7 +69,7 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 100 #number of days for the test set
+n_forecasts = 10 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts-1) # function implemented in forecast.R
 
 ## --- Forecasts on the test set ---
@@ -82,7 +82,7 @@ realized_library = read.csv(file = "./realized_library.csv") %>%
   mutate(date = ymd(date))
 
 
-date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts+h_max+1)
+date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts+h_max+4)
 df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = date_to_forecast) but now with h>1, we need to add some more dates
   merge(realized_library, by = "date")
 
@@ -104,7 +104,7 @@ for (i in seq_along(GM_models_list)) {
 }
 
 
-Rprof(interval = 0.05)
+#Rprof(interval = 0.05)
 
 first_date_for_forecasts = date_end_training - years(1) #needs to be old enough so that enough lags are included
 
@@ -152,21 +152,24 @@ for(i in seq_along(date_to_forecast)){
     forecast_list <- new_forecast$forecast[h_list]
     real_volatility_list <- real_volatility[h_list]
     
-    error_array[model_index, i, ] <- mapply(qlike, forecast_list, real_volatility_list)
+    forecast_cumu <- cumsum(forecast_list)
+    real_volatility_cumu <- cumsum(real_volatility_list)
+    
+    error_array[model_index, i, ] <- mapply(qlike, forecast_cumu, real_volatility_cumu)
     
   }
 }
 
-Rprof(NULL)
+error_array
 
-summaryRprof("Rprof.out")
+#Rprof(NULL)
+
+#summaryRprof("Rprof.out")
 
 saveRDS(error_array, file = "./data_error_array/error_array.rds")
 
 # ---- 4. use of results ---
 source(file = "./qlike.error_analysis.R")
 
-error_array_analysis(error_array)
-
-
+error_array_analysis(error_array, GM_models_list, h_list)
 
