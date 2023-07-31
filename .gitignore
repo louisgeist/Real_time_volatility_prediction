@@ -2,3 +2,5 @@
 .Rhistory
 api_key.py
 bibliography/
+Rprof.out
+Rshiny_HKMetrics/
