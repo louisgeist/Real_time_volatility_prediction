@@ -1,11 +1,13 @@
-sigma = 2
+library(ggplot2)
+
+sigma = 1
 
 qlike = function(x){
-  return(log(x**2)+sigma**2/x**2)
+  return(log(x)+sigma**2/x-1)
 }
 
-x_tab = seq(1,10,length.out = 1001)
+forecast = seq(0.25, 10,length.out = 10001)
 
-y_tab = qlike(x_tab)
+loss = qlike(forecast)
 
-plot(x_tab,y_tab,type="l")
+plot(forecast,loss,type="l")
