@@ -126,6 +126,18 @@ summaryRprof("Rprof.out")
 
 # error_computation (qlike defined in validation.R)
 boosted_error_computation <- function(h_list, forecast_array){
-  
+  # to be written
 }
+
+
+cumsum_on_forecast_array <- function(forecast_array,h_list){
+  for(date_index in seq_along(forecast_array[,1])){
+    forecast_array[date_index,] <- forecast_array[date_index,] %>%  cumsum()
+  }
+  
+  return(forecast_array[,h_list])
+}
+cumsum_on_forecast_array(test,h_list)
+
+test <<- test[date_index,] %>%  cumsum()
 
