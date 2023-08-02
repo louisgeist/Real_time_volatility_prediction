@@ -9,6 +9,7 @@ library(readr)
 library(alfred)
 library(mfGARCH)
 library(rugarch)
+library(pracma)
 
 # General paramaters (for the data download & estimation)
 main_index = "spx"
@@ -110,7 +111,7 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 1000 #number of days for the test set
+n_forecasts = 500 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
 
 ## --- Redownload of the data on the specific window for forecasts
@@ -223,16 +224,12 @@ for (model_index in seq_along(GM_models_list)) {
   # error computations
   real_volatility <- df_date_to_forecast$rv5[i:(i + h_max - 1)] * 10 ** 4
   
-  t = mapply(qlike, cum_forecast_array, real_volatility_array)
-  
-  #error_array[model_index, i, ] <-
-  
-  print("test")
+  error_array[model_index, ,] = mapply(qlike, cum_forecast_array, real_volatility_array) %>% 
+    pracma::Reshape(n_forecasts, length(h_list))
+
 }
 
 # error computations
-
-
 
 Rprof(NULL)
 

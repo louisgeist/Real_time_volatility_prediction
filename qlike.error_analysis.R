@@ -26,8 +26,4 @@ error_array_analysis <- function(error_array, GM_models_list, h_list){
   
   print(error_mean_min)
   
-  
 }
-
-#error_array <- readRDS(file = "./data_error_array/error_array.rds")
-#error_array_analysis(error_array, GM_models_list, h_list)

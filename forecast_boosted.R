@@ -43,7 +43,7 @@ boosted_forecast = function(model_index,
   list_tau_t = double(n_forecasts)
   list_tau_t.plus.1 = double(n_forecasts)
   
-  if (!is.null(names(df_long_term1)[[3]])) {
+  if (length(df_long_term1)>2) {
     df_long_term1 <- df_long_term1 %>%
       subset(!duplicated(get(names(df_long_term1)[[3]])))
   }
@@ -115,20 +115,6 @@ boosted_forecast = function(model_index,
   return(forecast_array)
 }
 
-#test
-
-Rprof(interval=0.05)
-test = boosted_forecast(1, h_list, n_forecasts, df_epsilon, df_long_term1)
-Rprof(NULL)
-
-summaryRprof("Rprof.out")
-
-
-# error_computation (qlike defined in validation.R)
-boosted_error_computation <- function(h_list, forecast_array){
-  # to be written
-}
-
 
 cumsum_on_forecast_array <- function(forecast_array,h_list){
   for(date_index in seq_along(forecast_array[,1])){
@@ -137,7 +123,3 @@ cumsum_on_forecast_array <- function(forecast_array,h_list){
   
   return(forecast_array[,h_list])
 }
-cumsum_on_forecast_array(test,h_list)
-
-test <<- test[date_index,] %>%  cumsum()
-
