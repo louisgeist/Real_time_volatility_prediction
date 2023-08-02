@@ -2,22 +2,13 @@ main_index = "spx"
 source(file = "./data_import.R")
 
 
-GM_models_list = c("GM_dhoust")
-# parameters (attention à bien donner toutes les données existantes..)
-x = GM_dhoust
-h_list = c(1, 5, 40) # must be in increasing order
-df_epsilon = df_main_index
-df_long_term1 = df_dhoust
-n_forecasts = 1000
-model_index = 1
-
-
 # function script
 boosted_forecast = function(model_index,
                             h_list,
                             n_forecasts,
                             df_epsilon,
-                            df_long_term1) {
+                            df_long_term1,
+                            df_long_term2 = NULL) {
   x = get(GM_models_list[[model_index]])
   h_max = max(h_list)
   
@@ -26,13 +17,10 @@ boosted_forecast = function(model_index,
   gamma = x$par["gamma"][[1]]
   
   K = x$K
-  pi = rev(x$est.weighting) * x$par[["theta"]]
   
   if (is.null(df_epsilon)) {
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
-  
-  
   
   estimation_last_date = x$df.fitted$date[[length(x$df.fitted$date)]]
   
@@ -48,15 +36,36 @@ boosted_forecast = function(model_index,
       subset(!duplicated(get(names(df_long_term1)[[3]])))
   }
   
+  pi = rev(x$est.weighting) * x$par[["theta"]]
   
-  for (i in seq_along(date_list)) {
-    #not really fast with an adply (for n_forecats = 1000, from 45sec to 40sec)
-    last_Z = df_long_term1 %>%
-      filter(date <= date_list[[i]]) %>%
-      tail(K + 1)
-    
-    list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi))
-    list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi))
+  if(is.null(df_long_term2)){
+    for (i in seq_along(date_list)) {
+      #not really fast with an adply (for n_forecats = 1000, from 45sec to 40sec)
+      last_Z = df_long_term1 %>%
+        filter(date <= date_list[[i]]) %>%
+        tail(K + 1)
+      
+      list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi))
+      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi))
+    }
+  }else{ # remark : the second long term variable is necessarly daily, because of mfGARCH implementation
+    for (i in seq_along(date_list)) {
+      K.two = x$K.two
+      pi.two = rev(x$est.weighting.two) * x$par[["theta.two"]]
+      
+      last_Z = df_long_term1 %>%
+        filter(date <= date_list[[i]]) %>%
+        tail(K + 1)
+      
+      last_Z.two = df_long_term2 %>% 
+        filter(date <= date_list[[i]]) %>%
+        tail(K.two + 1)
+      
+      list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
+      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% tail(K.two)) * pi.two))
+      
+      print(list_tau_t[[i]])
+    }
   }
   
   

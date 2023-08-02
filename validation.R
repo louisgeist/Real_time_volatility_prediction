@@ -111,7 +111,7 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 500 #number of days for the test set
+n_forecasts = 50 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
 
 ## --- Redownload of the data on the specific window for forecasts
@@ -159,7 +159,7 @@ df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = d
 ### ---- GARCH-MIDAS models part ------
 #GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
 #GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai")
-GM_models_list = c("GM_dhoust", "GM_ip", "GM_nai", "GM_nfci", "GM_vix", "GM_vrp")
+GM_models_list = c("GM_vix_dhoust", "GM_ip", "GM_nai", "GM_nfci", "GM_vix", "GM_vrp")
 
 # build of error_array
 n_models <- length(GM_models_list)
@@ -202,9 +202,6 @@ for (model_index in seq_along(GM_models_list)) {
     
   } else if (length(var_names) == 3) {
     # 2 explanatory variables
-    stop(
-      "Boosted_forecast ne supporte pas les modèles à 2 variables de long terme pour l'instant."
-    )
     new_forecast = boosted_forecast(
       model_index,
       h_list,
@@ -235,7 +232,7 @@ Rprof(NULL)
 
 summaryRprof("Rprof.out")
 
-saveRDS(error_array, file = "./data_error_array/error_array.rds")
+#saveRDS(error_array, file = "./data_error_array/error_array.rds")
 
 # ---- 4. use of results ---
 source(file = "./qlike.error_analysis.R")
