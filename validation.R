@@ -111,7 +111,7 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 50 #number of days for the test set
+n_forecasts = 100 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
 
 ## --- Redownload of the data on the specific window for forecasts
@@ -157,9 +157,8 @@ df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = d
 
 
 ### ---- GARCH-MIDAS models part ------
-#GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
-#GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai")
-GM_models_list = c("GM_vix_dhoust", "GM_ip", "GM_nai", "GM_nfci", "GM_vix", "GM_vrp")
+GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") 
+#GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
 
 # build of error_array
 n_models <- length(GM_models_list)
@@ -207,7 +206,7 @@ for (model_index in seq_along(GM_models_list)) {
       h_list,
       n_forecasts,
       df_epsilon,
-      df_long_term1 = get(paste0("df_", var_names[[2]])),
+      df_long_term1 = get(paste0("df_", var_names[[3]])),
       df_long_term2 = get(paste0("df_", var_names[[2]]))
     )
     
@@ -216,12 +215,13 @@ for (model_index in seq_along(GM_models_list)) {
     stop("The model name is not in the correct form.")
   }
   
-  cum_forecast_array = cumsum_on_forecast_array(new_forecast, h_list)
+  #res_forecast_array = cumsum_on_forecast_array(new_forecast, h_list)
+  res_forecast_array = new_forecast[,h_list]
   
   # error computations
   real_volatility <- df_date_to_forecast$rv5[i:(i + h_max - 1)] * 10 ** 4
   
-  error_array[model_index, ,] = mapply(qlike, cum_forecast_array, real_volatility_array) %>% 
+  error_array[model_index, ,] = mapply(qlike, res_forecast_array, real_volatility_array) %>% 
     pracma::Reshape(n_forecasts, length(h_list))
 
 }
@@ -232,7 +232,7 @@ Rprof(NULL)
 
 summaryRprof("Rprof.out")
 
-#saveRDS(error_array, file = "./data_error_array/error_array.rds")
+saveRDS(error_array, file = "./data_error_array/error_array.rds")
 
 # ---- 4. use of results ---
 source(file = "./qlike.error_analysis.R")
