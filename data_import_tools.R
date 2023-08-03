@@ -217,3 +217,57 @@ import_nfci <- function() {
     
     return(df_nfci)
 }
+
+## ----- filter data function -----
+filter_data = function(first_date,
+                       last_date,
+                       df_main_index_raw,
+                       df_dhoust_raw,
+                       df_ip_raw,
+                       df_nai_raw,
+                       df_nfci_raw,
+                       df_vix_raw,
+                       df_vrp_raw,
+                       df_Rvol22_raw) {
+  # Find the index where the conditions are true
+  index_main_index <-
+    which(df_main_index_raw$date >= first_date &
+            df_main_index_raw$date < last_date)
+  index_dhoust <-
+    which(
+      floor_date(df_dhoust_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
+        floor_date(df_dhoust_raw$date, unit = "month") < floor_date(last_date, unit = "month")
+    )
+  index_ip <-
+    which(
+      floor_date(df_ip_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
+        floor_date(df_ip_raw$date, unit = "month") < floor_date(last_date, unit = "month")
+    )
+  index_nai <-
+    which(
+      floor_date(df_nai_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
+        floor_date(df_nai_raw$date, unit = "month") < floor_date(last_date, unit = "month")
+    )
+  index_nfci <-
+    which(
+      floor_date(df_nfci_raw$date, unit = "week", 5) >= floor_date(first_date, unit = "week", 5) &
+        floor_date(df_nfci_raw$date, unit = "week", 5) < floor_date(last_date, unit = "week", 5)
+    )
+  index_vix <-
+    which(df_vix_raw$date >= first_date & df_vix_raw$date < last_date)
+  index_vrp <-
+    which(df_vrp_raw$date >= first_date & df_vrp_raw$date < last_date)
+  index_Rvol22 <-
+    which(df_Rvol22_raw$date >= first_date &
+            df_Rvol22_raw$date < last_date)
+  
+  # Subset the DataFrames using the index
+  df_main_index <<- df_main_index_raw[index_main_index,]
+  df_dhoust <<- df_dhoust_raw[index_dhoust,]
+  df_ip <<- df_ip_raw[index_ip,]
+  df_nai <<- df_nai_raw[index_nai,]
+  df_nfci <<- df_nfci_raw[index_nfci,]
+  df_vix <<- df_vix_raw[index_vix,]
+  df_vrp <<- df_vrp_raw[index_vrp,]
+  df_Rvol22 <<- df_Rvol22_raw[index_Rvol22,]
+}
