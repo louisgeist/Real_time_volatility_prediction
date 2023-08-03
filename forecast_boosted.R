@@ -64,7 +64,6 @@ boosted_forecast = function(model_index,
       list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
       list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% tail(K.two)) * pi.two))
       
-      print(list_tau_t[[i]])
     }
   }
   
