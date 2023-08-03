@@ -14,67 +14,25 @@ library(pracma)
 # General paramaters (for the data download & estimation)
 main_index = "spx"
 
-# ----- 0.Tool ------
-filter_data = function(first_date,
-                       last_date,
-                       df_main_index_raw,
-                       df_dhoust_raw,
-                       df_ip_raw,
-                       df_nai_raw,
-                       df_nfci_raw,
-                       df_vix_raw,
-                       df_vrp_raw,
-                       df_Rvol22_raw) {
-  # Find the index where the conditions are true
-  index_main_index <-
-    which(df_main_index_raw$date >= first_date &
-            df_main_index_raw$date < last_date)
-  index_dhoust <-
-    which(
-      floor_date(df_dhoust_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
-        floor_date(df_dhoust_raw$date, unit = "month") < floor_date(last_date, unit = "month")
-    )
-  index_ip <-
-    which(
-      floor_date(df_ip_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
-        floor_date(df_ip_raw$date, unit = "month") < floor_date(last_date, unit = "month")
-    )
-  index_nai <-
-    which(
-      floor_date(df_nai_raw$date, unit = "month") >= floor_date(first_date, unit = "month") &
-        floor_date(df_nai_raw$date, unit = "month") < floor_date(last_date, unit = "month")
-    )
-  index_nfci <-
-    which(
-      floor_date(df_nfci_raw$date, unit = "week", 5) >= floor_date(first_date, unit = "week", 5) &
-        floor_date(df_nfci_raw$date, unit = "week", 5) < floor_date(last_date, unit = "week", 5)
-    )
-  index_vix <-
-    which(df_vix_raw$date >= first_date & df_vix_raw$date < last_date)
-  index_vrp <-
-    which(df_vrp_raw$date >= first_date & df_vrp_raw$date < last_date)
-  index_Rvol22 <-
-    which(df_Rvol22_raw$date >= first_date &
-            df_Rvol22_raw$date < last_date)
-  
-  # Subset the DataFrames using the index
-  df_main_index <<- df_main_index_raw[index_main_index,]
-  df_dhoust <<- df_dhoust_raw[index_dhoust,]
-  df_ip <<- df_ip_raw[index_ip,]
-  df_nai <<- df_nai_raw[index_nai,]
-  df_nfci <<- df_nfci_raw[index_nfci,]
-  df_vix <<- df_vix_raw[index_vix,]
-  df_vrp <<- df_vrp_raw[index_vrp,]
-  df_Rvol22 <<- df_Rvol22_raw[index_Rvol22,]
-}
+# ----- Parameters -----
+GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even you remove models here, they will still be estimated (but not use of forecasts)
 
+h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
+n_forecasts = 500 #number of days for the test set
+
+date_begin_training = ymd("1991-01-05") # first day of availability of S&P, (NDX is available later) #ymd("1971-01-05")
+date_end_training = ymd("2015-01-01")
+
+cum_evaluation = TRUE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
+
+# ----- 0.Tools : loss function ------
 qlike <- function(h, sigma_square) {
   return(sigma_square / h - log(sigma_square / h) - 1)
 }
 
 
 # ----- 1. Data import -----
-final_date = ymd("2019-01-01") #for download
+final_date = ymd("2019-01-01") #for download, used as a global variable in "data_import.R"
 source("./data_import.R")
 
 # stable storage of the data
@@ -88,10 +46,11 @@ df_vix_raw = df_vix
 df_vrp_raw = df_vrp
 df_Rvol22_raw = df_Rvol22
 
-
 # ------ 2. Training ------
-date_begin_training = ymd("1971-01-05") # first day of availibity of S&P, (NDX is available later)
-date_end_training = ymd("2015-01-01")
+
+# date_begin/end_traing now defined in the "parameters" section
+# date_begin_training = ymd("1991-01-05") # first day of availability of S&P, (NDX is available later) #ymd("1971-01-05")
+# date_end_training = ymd("2015-01-01")
 
 filter_data(
   first_date = date_begin_training,
@@ -111,7 +70,8 @@ source("./estimation.R")
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
 
-n_forecasts = 100 #number of days for the test set
+# n_forecasts now defined in the "parameters" section
+#n_forecasts = 500 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
 
 ## --- Redownload of the data on the specific window for forecasts
@@ -130,18 +90,9 @@ filter_data(
   df_Rvol22_raw
 )
 
-# WATCH OUT : if needed, old data needs to be reimported
-df_main_index_raw <- df_main_index
-df_dhoust_raw <- df_dhoust
-df_ip_raw <- df_ip
-df_nai_raw <- df_nai
-df_nfci_raw <- df_nfci
-df_vix_raw <- df_vix
-df_vrp_raw <- df_vrp
-df_Rvol22_raw <- df_Rvol22
-
 ## --- Forecasts on the test set ---
-h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
+# h_list now defined in the "parameters" section
+# h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
 h_max = max(h_list)
 
 ## --- Test set ---
@@ -157,7 +108,8 @@ df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = d
 
 
 ### ---- GARCH-MIDAS models part ------
-GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") 
+# GM_models_list now defined in the "parameters" section
+#GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") 
 #GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
 
 # build of error_array
@@ -215,8 +167,12 @@ for (model_index in seq_along(GM_models_list)) {
     stop("The model name is not in the correct form.")
   }
   
-  #res_forecast_array = cumsum_on_forecast_array(new_forecast, h_list)
-  res_forecast_array = new_forecast[,h_list]
+  if(cum_evaluation == TRUE){
+    res_forecast_array = cumsum_on_forecast_array(new_forecast, h_list)
+  }
+  else{
+    res_forecast_array = new_forecast[,h_list]
+  }
   
   # error computations
   real_volatility <- df_date_to_forecast$rv5[i:(i + h_max - 1)] * 10 ** 4
@@ -232,9 +188,15 @@ Rprof(NULL)
 
 summaryRprof("Rprof.out")
 
+
+
+
 saveRDS(error_array, file = "./data_error_array/error_array.rds")
 
-# ---- 4. use of results ---
+
+
+
+# ----- 4. use of results -----
 source(file = "./qlike.error_analysis.R")
 
 error_array_analysis(error_array, GM_models_list, h_list)
