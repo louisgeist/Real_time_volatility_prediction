@@ -37,9 +37,9 @@ jobs:
 #    - if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
     - name: Install R & dependencies
       run: |
-        yum install R --nogpgcheck
-        yum install openssl-devel
-        yum install libcurl-devel
+        apt install R --nogpgcheck
+        apt install openssl-devel
+        apt install libcurl-devel
         R -q -e "install.packages(c('curl'))"
         Rscript -e 'install.packages(c("curl", "jsonlite", "devtools", "GetoptLong"))'
         Rscript -e "library(devtools)"
