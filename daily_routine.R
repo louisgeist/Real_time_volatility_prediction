@@ -21,6 +21,7 @@ source("./estimation.R")
 
 # ------ 3. Forecast ------
 source("./forecast.R")
+source("./forecast_boosted.R")
 h = 80
 
 # GARCH-MIDAS models
