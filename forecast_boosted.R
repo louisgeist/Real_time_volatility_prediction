@@ -1,7 +1,3 @@
-main_index = "spx"
-source(file = "./data_import.R")
-
-
 # function script
 boosted_forecast = function(model_index,
                             h_list,

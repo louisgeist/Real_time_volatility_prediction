@@ -69,6 +69,7 @@ source("./estimation.R")
 
 # ------ 3. Forecasts & evaluation------
 source("./forecast.R")
+source("./forecast_boosted.R")
 
 # n_forecasts now defined in the "parameters" section
 #n_forecasts = 500 #number of days for the test set
