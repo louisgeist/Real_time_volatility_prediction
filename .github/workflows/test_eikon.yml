@@ -1,6 +1,6 @@
 name: R Script
 
-on:
+# on:
 #   schedule:
 #    - cron: "40 6 * * *"
 #  push:
