@@ -11,10 +11,8 @@ library(mfGARCH)
 library(rugarch)
 library(pracma)
 
-# General paramaters (for the data download & estimation)
-main_index = "spx"
-
 # ----- Parameters -----
+main_index = "spx"
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
@@ -113,7 +111,7 @@ df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = d
 #GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") 
 #GM_models_list =  c("GM_dhoust","GM_ip","GM_nai","GM_nfci", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai") #GM_Rvol_22, "GM_vix_nfci" -> temporarly removed because K=264 makes forecasting really two slow
 
-# build of error_array
+## i) build of error_array
 n_models <- length(GM_models_list)
 n_dates <- length(date_to_forecast)
 
@@ -125,17 +123,24 @@ for (i in seq_along(GM_models_list)) {
   }
 }
 
-# real values array
+## ii) real values array
 df_real_volatility = realized_library %>% filter(date >= (date_end_training - days(1)))
 
-real_volatility_array <- array(0, dim = c(n_dates, length(h_list)))
+real_volatility_array <- array(0, dim = c(n_dates, h_max))
 
 for(date_index in 1:n_dates){
-  real_volatility_array[date_index,] <- df_real_volatility$rv5[date_index + h_list] * 10 ** 4
+  real_volatility_array[date_index,] <- df_real_volatility$rv5[(date_index+1): (date_index+h_max)] * 10 ** 4
 }
 
+print(size(real_volatility_array))
 
-# forecasts array
+if(cum_evaluation==TRUE){
+  real_volatility_array = cumsum_on_forecast_array(real_volatility_array, h_list)
+}
+
+print(size(real_volatility_array))
+
+## iii) forecasts array
 Rprof(interval = 0.05)
 for (model_index in seq_along(GM_models_list)) {
   model = GM_models_list[[model_index]]
@@ -148,7 +153,7 @@ for (model_index in seq_along(GM_models_list)) {
     new_forecast = boosted_forecast(model_index,
                                     h_list,
                                     n_forecasts,
-                                    df_epsilon,
+                                    df_main_index,
                                     df_long_term1 = get(paste0("df_", var_names[[2]])))
     
     
@@ -158,7 +163,7 @@ for (model_index in seq_along(GM_models_list)) {
       model_index,
       h_list,
       n_forecasts,
-      df_epsilon,
+      df_main_index,
       df_long_term1 = get(paste0("df_", var_names[[3]])),
       df_long_term2 = get(paste0("df_", var_names[[2]]))
     )
@@ -176,28 +181,74 @@ for (model_index in seq_along(GM_models_list)) {
   }
   
   # error computations
-  real_volatility <- df_date_to_forecast$rv5[i:(i + h_max - 1)] * 10 ** 4
-  
   error_array[model_index, ,] = mapply(qlike, res_forecast_array, real_volatility_array) %>% 
     pracma::Reshape(n_forecasts, length(h_list))
-
+  
 }
-
-# error computations
 
 Rprof(NULL)
 
 summaryRprof("Rprof.out")
 
 
+### ---- GARCH(1,1) part ------
+forecast_garch11  = ugarchforecast(GARCH11, 
+                                   n.ahead = h_max
+                                   )@forecast$sigmaFor
 
 
-saveRDS(error_array, file = "./data_error_array/error_array.rds")
+# manual computation
+df_epsilon = df_main_index %>% filter(date >= date_end_training) # new data
+
+omega <- GARCH11@fit$coef[[1]]
+alpha <- GARCH11@fit$coef[[2]]
+beta <- GARCH11@fit$coef[[3]]
 
 
+### a) compute of all the sigma^2_t+1
+last_epsilon = GARCH11@fit$residuals[[length(GARCH11@fit$residuals)]]
+last_sigma2 = GARCH11@fit$sigma[[length(GARCH11@fit$sigma)]] **2
 
+list_sigma2 = double(length(date_to_forecast))
+
+for(date_index in seq_along(date_to_forecast)){ 
+  list_sigma2[[date_index]] = omega + alpha * last_epsilon**2 + beta * last_sigma2
+  
+  # update of "last" variables
+  last_sigma2 = list_sigma2[[date_index]]
+  last_epsilon = df_epsilon[[2]][[date_index]]
+  
+}
+
+### b) compute of the predictions at any horizon
+garch11_forecast <- function(sigma_tplus1, k, omega, alpha, beta){
+  return(omega * (1 - (alpha+beta)^(k-1))/(1-alpha-beta) + (alpha+beta)^(k-1) * sigma_tplus1)
+}
+
+
+forecast_garch11_array <- array(0, dim = c(n_dates, length(h_list)))
+
+for(date in 1:n_dates) {
+  list_forecast = adply(1:h_max, .margins = c(1), .fun = function(h) garch11_forecast(list_sigma2[[date]], h, omega, alpha, beta))[[2]]
+  
+  if(cum_evaluation==TRUE){
+    forecast_garch11_array[date,] <- cumsum(list_forecast)[h_list]
+  }else{
+    forecast_garch11_array[date,] <-list_forecast[h_list]
+  }
+  
+}
+
+error_garch11 = mapply(qlike, forecast_garch11_array, real_volatility_array) %>% 
+  pracma::Reshape(n_forecasts, length(h_list))
+
+#error_array_save = error_array
+
+error_array = abind::abind(error_array, array(error_garch11, dim = c(1,dim(error_garch11))), along = 1)
 
 # ----- 4. use of results -----
+
+saveRDS(error_array, file = "./data_error_array/error_array.rds")
 source(file = "./qlike.error_analysis.R")
 
-error_array_analysis(error_array, GM_models_list, h_list)
+error_array_analysis(error_array, c(GM_models_list,"GARCH(1,1)"), h_list)
