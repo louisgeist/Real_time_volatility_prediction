@@ -1,4 +1,4 @@
-# function script
+# GARCH-MIDAS
 boosted_forecast = function(model_index,
                             h_list,
                             n_forecasts,
@@ -102,7 +102,7 @@ boosted_forecast = function(model_index,
     
     for (h in 1:h_max) {
       if (current_month == month(date_list[[date_index]] + days(h))) {
-        forecast_array[date_index, h_index] <- list_tau_t[[date_index]]
+        forecast_array[date_index, h] <- list_tau_t[[date_index]]
       }
       else{
         break
@@ -127,3 +127,4 @@ cumsum_on_forecast_array <- function(forecast_array,h_list){
   
   return(forecast_array[,h_list])
 }
+

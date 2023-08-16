@@ -6,7 +6,7 @@
 # ----- fit of normal GARCH ---------
 spec_garch = ugarchspec(
   variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
-  mean.model = list(include.mean = TRUE, armaOrder = c(0,0)),
+  mean.model = list(include.mean = FALSE, armaOrder = c(0,0)),
   distribution.model = "norm"
 )
 GARCH11 = ugarchfit(spec_garch, df_main_index[,2] %>% as.data.frame() )
