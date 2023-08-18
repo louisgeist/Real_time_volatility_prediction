@@ -224,7 +224,7 @@ import_nai <- function() {
   
   df_nai = df_nai_partial %>% fill_missing_dates(frequency = "month") %>% as_tibble()
   
-  return(df_ip)
+  return(df_nai)
 }
 
 import_nfci <- function() {
