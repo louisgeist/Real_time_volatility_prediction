@@ -275,10 +275,12 @@ filter_data = function(first_date,
         floor_date(df_nai_raw$date, unit = "month") < floor_date(last_date, unit = "month")
     )
   index_nfci <-
-    which(
-      floor_date(df_nfci_raw$date, unit = "week", 5) >= floor_date(first_date, unit = "week", 5) &
-        floor_date(df_nfci_raw$date, unit = "week", 5) < floor_date(last_date, unit = "week", 5)
-    )
+    which(df_nfci_raw$date >= first_date &
+            df_nfci_raw$date < last_date) #simplification because it led to errors
+    #which(
+    #  floor_date(df_nfci_raw$date, unit = "week", 5) >= floor_date(first_date, unit = "week", 5) &
+    #    floor_date(df_nfci_raw$date, unit = "week", 5) < floor_date(last_date, unit = "week", 5)
+    #)
   index_vix <-
     which(df_vix_raw$date >= first_date & df_vix_raw$date < last_date)
   index_vrp <-
