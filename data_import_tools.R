@@ -97,9 +97,17 @@ import_ndx <- function() {
 }
 
 import_Rvol22 <- function() {
+  if(main_index == "spx"){
+    instrument <- "^GSPC"
+  } else if(main_index == "ndx"){
+    instrument <- "^NDX"
+  } else{
+    stop("Please enter a correct main_index name (spx or ndx in char)")
+  }
+  
   spx.raw <-
     get.hist.quote(
-      instrument = "^GSPC",
+      instrument = instrument,
       start = as.Date("1971-01-01"),
       end = final_date,
       quote = "Close"
@@ -113,8 +121,16 @@ import_Rvol22 <- function() {
 }
 
 import_vix <- function() {
+  if(main_index == "spx"){
+    vix_name <- "^VIX"
+  } else if(main_index == "ndx"){
+    vix_name <- "^VXN"
+  } else{
+    stop("Please enter a correct main_index name (spx or ndx in char)")
+  }
+  
   vix.raw = get.hist.quote(
-    instrument = "^VIX",
+    instrument = vix_name,
     start = as.Date("1990-01-01"),
     end = final_date,
     quote = "Close"
@@ -130,8 +146,18 @@ import_vix <- function() {
 }
 
 import_vrp <- function() {
+  if(main_index == "spx"){
+    instrument <- "^GSPC"
+    vix_name <- "^VIX"
+  } else if(main_index == "ndx"){
+    instrument <- "^NDX"
+    vix_name <- "^VXN"
+  } else{
+    stop("Please enter a correct main_index name (spx or ndx in char)")
+  }
+  
   spx.raw = get.hist.quote(
-    instrument = "^GSPC",
+    instrument = instrument,
     start = as.Date("1971-01-01"),
     end = final_date,
     quote = "Close"
@@ -140,7 +166,7 @@ import_vrp <- function() {
   Rvol22 = zoo::rollmean(spx.ret ** 2, 22, align = "right") #the current value and the past 21 values are taken for the mean
   
   vix.raw = get.hist.quote(
-    instrument = "^VIX",
+    instrument = vix_name,
     start = as.Date("1990-01-01"),
     quote = "Close"
   )
