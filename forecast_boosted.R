@@ -21,7 +21,7 @@ boosted_forecast = function(model_index,
   estimation_last_date = x$df.fitted$date[[length(x$df.fitted$date)]]
   
   date_list <-
-    seq_quotation_date(estimation_last_date, n_forecasts - 1)
+    seq_quotation_date(estimation_last_date, n_forecasts - 1) # origon date for predictions
   
   # compute of all the tau
   list_tau_t = double(n_forecasts)
@@ -58,7 +58,7 @@ boosted_forecast = function(model_index,
         tail(K.two + 1)
       
       list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
-      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% tail(K.two)) * pi.two))
+      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
       
     }
   }
@@ -77,10 +77,10 @@ boosted_forecast = function(model_index,
     list_constant + (alpha + gamma * as.numeric(list_epsilon < 0)) * list_epsilon **
     2 / list_tau_t
   
-  list_g_i.plus.1[[1]] <-
-    list_g_i.plus.1[[1]] + beta * x$g[[length(x$g)]]
   
-  for (i in 2:n_forecasts) {
+  list_g_i.plus.1[[1]] <- list_g_i.plus.1[[1]] + beta * x$g[[length(x$g)]] #initialsation
+  
+  for (i in 2:n_forecasts) { # reccursion
     list_g_i.plus.1[[i]] <-
       list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
   }
@@ -101,7 +101,7 @@ boosted_forecast = function(model_index,
     current_month <- month(date_list[[date_index]])
     
     for (h in 1:h_max) {
-      if (current_month == month(date_list[[date_index]] + days(h))) {
+      if (current_month == month(date_list[[date_index + h]])) {
         forecast_array[date_index, h] <- list_tau_t[[date_index]]
       }
       else{
