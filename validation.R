@@ -12,14 +12,14 @@ library(rugarch)
 library(pracma)
 
 # ----- Parameters -----
-main_index = "spx"
+main_index = "spx" # watch out : at the moment, ndx cannot be used, because we don't have the real values of ndx volatility
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
-n_forecasts = 400 #number of days for the test set
+n_forecasts = 250 #number of days for the test set
 
 date_begin_training = ymd("1991-01-05") # first day of availability of S&P, (NDX is available later) #ymd("1971-01-05")
-date_end_training = ymd("2017-01-01")
+date_end_training = ymd("2014-01-01")
 
 cum_evaluation = TRUE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
 
@@ -69,8 +69,6 @@ source("./estimation.R")
 source("./forecast.R")
 source("./forecast_boosted.R")
 
-# n_forecasts now defined in the "parameters" section
-#n_forecasts = 500 #number of days for the test set
 date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
 
 ## --- Redownload of the data on the specific window for forecasts
@@ -94,17 +92,6 @@ filter_data(
 # h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
 h_max = max(h_list)
 
-## --- Test set ---
-realized_library = read.csv(file = "./realized_library.csv") %>%
-  select(c("date", "rv5")) %>%
-  mutate(date = ymd(date))
-
-
-date_to_forecast_plus_h = seq_quotation_date(date_end_training, n_forecasts +
-                                               h_max + 4)
-df_date_to_forecast = data.frame(date = date_to_forecast_plus_h) %>%  #(date = date_to_forecast) but now with h>1, we need to add some more dates
-  merge(realized_library, by = "date")
-
 
 ### ---- GARCH-MIDAS models part ------
 # GM_models_list now defined in the "parameters" section
@@ -124,6 +111,10 @@ for (i in seq_along(GM_models_list)) {
 }
 
 ## ii) real values array
+realized_library = read.csv(file = "./realized_library.csv") %>%
+  select(c("date", "rv5")) %>%
+  mutate(date = ymd(date))
+
 df_real_volatility = realized_library %>% filter(date >= (date_end_training - days(1)))
 
 real_volatility_array <- array(0, dim = c(n_dates, h_max))
@@ -132,13 +123,10 @@ for(date_index in 1:n_dates){
   real_volatility_array[date_index,] <- df_real_volatility$rv5[(date_index+1): (date_index+h_max)] * 10 ** 4
 }
 
-print(size(real_volatility_array))
-
 if(cum_evaluation==TRUE){
   real_volatility_array = cumsum_on_forecast_array(real_volatility_array, h_list)
 }
 
-print(size(real_volatility_array))
 
 ## iii) forecasts array
 Rprof(interval = 0.05)
@@ -196,7 +184,6 @@ forecast_garch11  = ugarchforecast(GARCH11,
                                    n.ahead = h_max
                                    )@forecast$sigmaFor
 
-
 # manual computation
 df_epsilon = df_main_index %>% filter(date >= date_end_training) # new data
 
@@ -242,9 +229,12 @@ for(date in 1:n_dates) {
 error_garch11 = mapply(qlike, forecast_garch11_array, real_volatility_array) %>% 
   pracma::Reshape(n_forecasts, length(h_list))
 
-#error_array_save = error_array
-
+# add to error_array
 error_array = abind::abind(error_array, array(error_garch11, dim = c(1,dim(error_garch11))), along = 1)
+
+### ---- constant forecast ------
+
+forecast_constant_array <- array(0, dim = c(n_dates, length(h_list)))
 
 # ----- 4. use of results -----
 

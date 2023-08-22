@@ -89,6 +89,8 @@ boosted_forecast = function(model_index,
   ## array creation
   forecast_array <- array(0, dim = c(n_forecasts, h_max))
   
+  date_list_plushdays = seq_quotation_date(date_list[[1]],n_forecasts + h_max) # to test in the loop if the forecast is in the same month/week as the origin
+  
   for (date in 1:n_forecasts) {
     forecast_array[date, ] <- double(h_max)
   }
@@ -98,22 +100,48 @@ boosted_forecast = function(model_index,
     forecast_array[date_index, ] <-
       rep(list_tau_t.plus.1[[date_index]], h_max)
     
-    current_month <- month(date_list[[date_index]])
     
-    for (h in 1:h_max) {
-      if (current_month == month(date_list[[date_index + h]])) {
-        forecast_array[date_index, h] <- list_tau_t[[date_index]]
+    if(!is.null(df_long_term2) | length(df_long_term1) == 2){# tau is updated daily : nothing has to be done
+      
+      
+      
+      
+      
+    }else if(colnames(df_long_term1)[[3]] == "year_month"){
+      origin_month <- month(date_list[[date_index]])
+      
+      for (h in 1:h_max) {
+        if (origin_month == month(date_list_plushdays[[date_index + h]])) {
+          forecast_array[date_index, h] <- list_tau_t[[date_index]]
+        }
+        else{
+          break
+        }
       }
-      else{
-        break
+    
+      
+    } else if(colnames(df_long_term1)[[3]] == "year_week"){
+      
+      origin_week <- week(date_list[[date_index]])
+      for (h in 1:h_max) {
+        if (origin_week == week(date_list_plushdays[[date_index + h]])) {
+          forecast_array[date_index, h] <- list_tau_t[[date_index]]
+        }
+        else{
+          break
+        }
       }
+    }else{
+      stop("Problem in the long term variables (faced in boosted_forecast).")
     }
+    
+
   }
   
   ## forecast
   for (date_index in seq_along(date_list)) {
     forecast_array[date_index, ] <-
-      forecast_array[date_index, ] * (1 + (delta ^(1:h)) * (list_g_i.plus.1[[date_index]] - 1))
+      forecast_array[date_index, ] * (1 + (delta ^(1:h_max)) * (list_g_i.plus.1[[date_index]] - 1))
   }
   
   return(forecast_array)
