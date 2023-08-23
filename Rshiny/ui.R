@@ -10,8 +10,6 @@ fluidPage(
   titlePanel("Real time volatility forecast"),
   h1("Optimal volatility forecast with GARCH-MIDAS models"),
   
-  
-  
   ##### SIDE BAR LAYOUT
   sidebarLayout(
     sidebarPanel(
@@ -56,5 +54,9 @@ fluidPage(
       plotlyOutput("plot_training_data"),
       plotlyOutput("spx_plot")
       )
-  )
+  ),
+  
+  h1("QLIKE mean error"),
+  tableOutput("error_array"),
+  tableOutput("min_array")
 )

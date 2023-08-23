@@ -10,8 +10,11 @@
 library(shiny)
 library(tidyverse)
 library(RColorBrewer)
+library(plyr)
 
+source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
+
 five_min_data = read_excel("../data_eikon/spx_18_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
 df_RV = compute_realized_volatility(five_min_data)
 
@@ -45,6 +48,13 @@ function(input, output, session) {
     df = read.csv(file = location_forecasts) %>% mutate(date = ymd(date))
     
     return(df)
+  })
+  
+  error_array = reactive({
+    
+    x = readRDS("../data_error_array/error_array1.rds")
+    
+    return(x)
   })
   
   
@@ -108,5 +118,16 @@ function(input, output, session) {
               yaxis = list(title = "Close value"))
      p
   })
+
+  
+  output$error_array <- renderTable({
+    error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean
+  }, rownames = TRUE)
+  
+  output$min_array <- renderTable({
+    error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean_min
+  }, rownames = TRUE) #, spacing = "l"
+  
+  
 }
 
