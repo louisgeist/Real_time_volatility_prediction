@@ -11,6 +11,9 @@ library(shiny)
 library(tidyverse)
 library(RColorBrewer)
 
+source("../eikon_data_preprocessing.R")
+five_min_data = read_excel("../data_eikon/spx_18_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+df_RV = compute_realized_volatility(five_min_data)
 
 #-------- server logic --------
 function(input, output, session) {
@@ -45,6 +48,7 @@ function(input, output, session) {
   })
   
   
+  
   ### reactive plots
   output$plot <- renderPlotly({
 
@@ -64,7 +68,18 @@ function(input, output, session) {
       # "add_lines"
     }
     
+    # real volatility
+    main_plot = main_plot %>% add_lines(data = df_RV, x = ~date, y = ~RV, line = list(color = "black"), name = "Real volatility")
     
+
+    # gray area
+    main_plot = main_plot %>%
+      add_ribbons(x = c(df_RV$date[[1]], df_training_data()$date[[length(df_training_data()$date)]]), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
+                  fillcolor = "rgba(211, 211, 211, 0.3)", line = list(color = "rgba(211, 211, 211, 0.5)"),
+                  name = "Grayed Area")
+    
+
+    # caption
     main_plot = main_plot %>%
       layout(title = "Graph",
              xaxis = list(title = "Date"),
