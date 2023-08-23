@@ -238,7 +238,17 @@ forecast_constant_array <- array(0, dim = c(n_dates, length(h_list)))
 
 # ----- 4. use of results -----
 
-saveRDS(error_array, file = "./data_error_array/error_array.rds")
+x = list(error_array = error_array,
+         models = c(GM_models_list,"GARCH(1,1)"),
+         h_list = h_list,
+         main_index = main_index,
+         n_forecasts = n_forecasts,
+         date_begin_training = date_begin_training,
+         date_end_training = date_end_training,
+         cum_evaluation = cum_evaluation
+         )
+
+saveRDS(x, file = "./data_error_array/error_array.rds")
 source(file = "./qlike.error_analysis.R")
 
-error_array_analysis(error_array, c(GM_models_list,"GARCH(1,1)"), h_list)
+error_array_analysis(x$error_array, x$models, x$h_list)
