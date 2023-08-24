@@ -80,9 +80,11 @@ boosted_forecast = function(model_index,
   
   list_g_i.plus.1[[1]] <- list_g_i.plus.1[[1]] + beta * x$g[[length(x$g)]] #initialsation
   
-  for (i in 2:n_forecasts) { # reccursion
-    list_g_i.plus.1[[i]] <-
-      list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
+  if(n_forecasts > 1){
+    for (i in 2:n_forecasts) { # recursion
+      list_g_i.plus.1[[i]] <-
+        list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
+    }
   }
   
   # compute of the forecasts
