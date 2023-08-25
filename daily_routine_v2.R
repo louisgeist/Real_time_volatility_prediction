@@ -22,6 +22,12 @@ n_forecasts = 1
 date_begin_training = ymd("1991-01-05")
 date_end_training = origin_date
 
+# ---- Test -----
+if( wday(origin_date) %in% c(1,7)){
+  q()
+}
+   
+
 # ----- 1. Data import -----
 final_date = origin_date
 source("./data_import.R")
