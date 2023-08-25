@@ -16,7 +16,7 @@ library(rugarch)
 main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
-h_list = c(1, 2, 5, 10, 22, 44, 66)
+h_list = 1:66 #c(1, 2, 5, 10, 22, 44, 66)
 n_forecasts = 1
 
 date_begin_training = ymd("1991-01-05")
