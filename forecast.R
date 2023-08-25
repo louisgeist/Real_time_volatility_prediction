@@ -149,8 +149,6 @@ bootstrap_forecast <- function(x, h) {
 
 ## ----- optimal forecast ----
 ### GARCH(1,1)
-x = GARCH11
-
 GARCH11_optimal_forecast <-
   function(x,h){
     # returns a list of optimal forecast for horizon 1 to h
