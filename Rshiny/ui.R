@@ -18,9 +18,11 @@ fluidPage(
           "origin_date",
           "Date of data download :",
           value = Sys.Date(),
-          min = "2023-06-26",
+          min = "2023-05-01",
           max = Sys.Date(),
           format = "yyyy-mm-dd",
+          daysofweekdisabled = c(0,6),
+          weekstart = 1
         ),
         
         

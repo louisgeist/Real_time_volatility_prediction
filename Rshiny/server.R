@@ -42,6 +42,7 @@ function(input, output, session) {
     return(df)
   })
   
+
   df_forecasts = reactive({
     x = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
     
@@ -52,6 +53,11 @@ function(input, output, session) {
     df$date <- seq_quotation_date(input$origin_date, max(x$h_list))[1:max(x$h_list)]
 
     return(df)
+  })
+  
+  x_forecast = reactive({
+    x = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
+    return(x)    
   })
   
   error_array = reactive({
@@ -83,12 +89,12 @@ function(input, output, session) {
     }
     
     # real volatility
-    main_plot = main_plot %>% add_lines(data = df_RV, x = ~date, y = ~RV, line = list(color = "black"), name = "Real volatility")
-    
+    main_plot = main_plot %>% add_markers(data = df_RV, x = ~date, y = ~RV, line = list(color = "black"), name = "Real volatility")
+      # add_lines instead of add_markers to remove the red points
 
     # gray area
     main_plot = main_plot %>%
-      add_ribbons(x = c(df_RV$date[[1]], df_training_data()$date[[length(df_training_data()$date)]]), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
+      add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date - days(1)), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
                   fillcolor = "rgba(211, 211, 211, 0.3)", line = list(color = "rgba(211, 211, 211, 0.5)"),
                   name = "Grayed Area")
     
@@ -138,4 +144,3 @@ function(input, output, session) {
     return(params)
   })
 }
-
