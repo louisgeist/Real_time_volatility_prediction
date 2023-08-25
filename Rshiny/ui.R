@@ -56,7 +56,19 @@ fluidPage(
       )
   ),
   
-  h1("QLIKE mean error"),
-  tableOutput("error_array"),
-  tableOutput("min_array")
+  h1("Models evaluation"),
+    
+  p("The following parameters were used:",
+    tags$ul(
+      tags$li("Main index : ", uiOutput("params")),
+      tags$li("Parameter 2: Value 2"),
+      tags$li("Parameter 3: Value 3")
+    )
+  ),
+  
+  fluidRow(
+    column(width = 6, h1("QLIKE mean error"), tableOutput("error_array")),
+    column(width = 6, h1("Minimum mean error"), tableOutput("min_array"))
+  )
+
 )

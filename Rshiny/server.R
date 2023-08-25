@@ -36,17 +36,21 @@ function(input, output, session) {
   
   ### reactive dataframes 
   df_training_data = reactive({
-    location_training_data = paste0("../data_plot/",input$origin_date,"_training_data.csv")
+    location_training_data = paste0("../data_daily_forecast/training_data.csv")
     
     df = read.csv(file = location_training_data) %>% mutate(date = ymd(date))
     return(df)
   })
   
   df_forecasts = reactive({
-    location_forecasts = paste0("../data_plot/",input$origin_date,"_forecasts.csv")
+    x = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
     
-    df = read.csv(file = location_forecasts) %>% mutate(date = ymd(date))
+    forecast_array = x$forecast_array %>% drop() # "drop()" removes the dimension 1 of the array
+    df = as.data.frame(forecast_array %>% t())
     
+    names(df) <- x$models
+    df$date <- seq_quotation_date(input$origin_date, max(x$h_list))[1:max(x$h_list)]
+
     return(df)
   })
   
@@ -128,6 +132,10 @@ function(input, output, session) {
     error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean_min
   }, rownames = TRUE) #, spacing = "l"
   
-  
+  output$params<- renderUI({
+    params <- error_array()$main_index
+
+    return(params)
+  })
 }
 
