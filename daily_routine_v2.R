@@ -114,7 +114,7 @@ forecast_array = abind::abind(forecast_array, array(forecast_garch11[h_list], di
 # ----- 4. save of the results -----
 ## i) forecasts save
 x = list(forecast_array = forecast_array,
-         models = c(GM_models_list,"GARCH(1,1)"),
+         models = c(GM_models_list,"GARCH11"),
          h_list = h_list,
          main_index = main_index,
          origin_date = origin_date
