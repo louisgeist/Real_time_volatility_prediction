@@ -14,6 +14,7 @@ library(plyr)
 
 source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
+source("../forecast.R") # to import the function seq_quotation_date
 
 five_min_data = read_excel("../data_eikon/spx_18_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
 df_RV = compute_realized_volatility(five_min_data)
@@ -101,7 +102,7 @@ function(input, output, session) {
 
     # caption
     main_plot = main_plot %>%
-      layout(title = "Graph",
+      layout(title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
              xaxis = list(title = "Date"),
              yaxis = list(title = "Volatility"))
     
@@ -138,9 +139,20 @@ function(input, output, session) {
     error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean_min
   }, rownames = TRUE) #, spacing = "l"
   
-  output$params<- renderUI({
-    params <- error_array()$main_index
-
-    return(params)
+  output$tab_main_index<- renderUI({
+    return(error_array()$main_index)
   })
+  output$tab_n_forecasts<- renderUI({
+    return(error_array()$n_forecasts)
+  })
+  output$tab_begin_training<- renderUI({
+    return(error_array()$date_begin_training) 
+  })
+  output$tab_end_training <- renderUI({
+    return(error_array()$date_end_training)
+  })
+  output$tab_cumulative<- renderUI({
+    return(error_array()$cum_evaluation)
+  })
+  
 }

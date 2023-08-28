@@ -17,9 +17,9 @@ fluidPage(
         dateInput(
           "origin_date",
           "Date of data download :",
-          value = Sys.Date(),
+          value = floor_date(today()-days(1), unit = "week", week_start = 1), #default origin_date is last monday where we have prediction
           min = "2023-05-01",
-          max = Sys.Date(),
+          max = today() - days(1),
           format = "yyyy-mm-dd",
           daysofweekdisabled = c(0,6),
           weekstart = 1
@@ -37,7 +37,7 @@ fluidPage(
         ),
         
         checkboxGroupInput("models", "Choose the displayed models :", 
-                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip","GARCH11"),
+                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11"),
                            selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust"))
         ),
       wellPanel(
@@ -59,12 +59,49 @@ fluidPage(
   ),
   
   h1("Models evaluation"),
-    
-  p("The following parameters were used:",
+  
+  tags$style("
+    .parameter-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .parameter-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .parameter-label {
+      font-weight: bold;
+      min-width: 200px;
+    }
+  "),
+  
+  tags$div(
+    p("The following parameters were used:"),
     tags$ul(
-      tags$li("Main index : ", uiOutput("params")),
-      tags$li("Parameter 2: Value 2"),
-      tags$li("Parameter 3: Value 3")
+      class = "parameter-list",
+      tags$li(
+        class = "parameter-item",
+        tags$span("Main index : ", class = "parameter-label"), 
+        uiOutput("tab_main_index")
+      ),
+      tags$li(
+        class = "parameter-item",
+        tags$span("Number of forecasts: ", class = "parameter-label"), 
+        uiOutput("tab_n_forecasts")
+      ),
+      tags$li(
+        class = "parameter-item",
+        tags$span("Training period : ", class = "parameter-label"), 
+        uiOutput("tab_begin_training"), 
+        "  /  ", 
+        uiOutput("tab_end_training")
+      ),
+      tags$li(
+        class = "parameter-item",
+        tags$span("Cumulative evaluation : ", class = "parameter-label"), 
+        uiOutput("tab_cumulative")
+      )
     )
   ),
   
