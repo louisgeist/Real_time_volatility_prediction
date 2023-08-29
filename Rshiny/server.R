@@ -12,6 +12,8 @@ library(tidyverse)
 library(RColorBrewer)
 library(plyr)
 
+list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11") # also in ui.R
+
 source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
 source("../forecast.R") # to import the function seq_quotation_date
@@ -19,21 +21,10 @@ source("../forecast.R") # to import the function seq_quotation_date
 five_min_data = read_excel("../data_eikon/spx_29_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
 df_RV = compute_realized_volatility(five_min_data)
 
+quantile_array <- readRDS("../data_daily_forecast/quantile_array.rds")
+
 #-------- server logic --------
 function(input, output, session) {
-  
-  ### To show all prediction models at this date
-  # But it makes a reset of selected models each time we change the "origin_date"
-  # observeEvent(input$origin_date, {
-  #    
-  #    #location_forecasts = paste0("../data_plot/",input$origin_date,"_forecasts.csv")
-  #    #df = read.csv(file = location_forecasts) %>% mutate(date = ymd(date))
-  #    
-  #    available_models = names(df_forecasts())
-  #    
-  #    updateCheckboxGroupInput(session, "models", choices = available_models)
-  #  })
-  
   
   ### reactive dataframes 
   df_training_data = reactive({
@@ -77,16 +68,42 @@ function(input, output, session) {
     # adjustement according to the forecast horizon
     df_filtered <- df_forecasts()[1:input$horizon, ]
     
-    # plot
-    main_plot = plot_ly(df_filtered, x = ~date)
+    ### confidence interval - data frame building
+    h_max_ci <- dim(quantile_array)[[3]]
+
+    #lower bounds
+    df_quantile = as.data.frame(quantile_array[1,,] %>% t())
+    df_filtered_lowq <- df_quantile *(df_filtered[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
+    names(df_filtered_lowq) <- list_models
+    df_filtered_lowq <- df_filtered_lowq %>% rename_all(~ paste0("lower_",.))
+    #upper bounds
+    df_quantile = as.data.frame(quantile_array[2,,] %>% t())
+    df_filtered_upq <- df_quantile *(df_filtered[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
+    names(df_filtered_upq) <- list_models
+    df_filtered_upq <- df_filtered_upq %>% rename_all(~ paste0("upper_",.))
+
     
-    color_palette = brewer.pal(length(input$models), "Set1")
+    df_ic <- df_filtered_lowq %>% cbind(df_filtered_upq)# %>% cbind(df_filtered)
+    df_ic$date <- df_filtered$date[1:h_max_ci]
+    
+    ### PLOT
+    main_plot = plot_ly(df_filtered, x = ~date)
     
     for(i in seq_along(input$models)){
       new_model = input$models[[i]]
       
-      main_plot = main_plot %>% add_markers(y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
+      # point forecast
+      main_plot = main_plot %>% add_markers(data = df_filtered, y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
       # "add_lines"
+      
+      # confidence interval
+      if(input$bool_ic){
+        main_plot = main_plot %>% add_ribbons(data = df_ic,
+                                              x = ~date,
+                                              ymin = as.formula(paste0("~lower_",new_model)),
+                                              ymax = as.formula(paste0("~upper_",new_model)))
+      }
+      
     }
     
     # real volatility

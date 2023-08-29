@@ -4,6 +4,9 @@
 
 library(shiny)
 library(plotly)
+library(lubridate)
+
+list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11") # also in server.R
 
 # Define UI for application that draws a histogram
 fluidPage(
@@ -37,8 +40,10 @@ fluidPage(
         ),
         
         checkboxGroupInput("models", "Choose the displayed models :", 
-                           choices = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11"),
-                           selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust"))
+                           choices = list_models,
+                           selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust")),
+        
+        checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE,width = "4000px")
         ),
       wellPanel(
       
