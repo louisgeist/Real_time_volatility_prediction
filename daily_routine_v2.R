@@ -11,7 +11,7 @@ library(mfGARCH)
 library(rugarch)
 
 # ----- Parameters -----
-origin_date = today()
+origin_date = today()-days(1) # attention pour la génération de données : il y aura un décallage avec les dates, revenir à la version du script du 26/08/2023 (cad enlever le "-days(1)" - pour le en temps réel, il faut le mettre, car en lançant le script le 29/08 matin, j'ai pas encore les données du 29 août...)
 
 main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
@@ -23,7 +23,7 @@ date_begin_training = ymd("1991-01-05")
 date_end_training = origin_date
 
 # ---- Test -----
-if( wday(origin_date) %in% c(1,7)){
+if( wday(origin_date) %in% c(1,7)){ # saturday & sunday morning : no new data
   q()
 }
    
@@ -135,7 +135,3 @@ for(index in index_list){
 
 df_training_data = df_training_data %>% select(c("date", main_index ,index_list)) # in order to remove the "year_month" or "year_week" variables
 write_csv(df_training_data, "./data_daily_forecast/training_data.csv")
-
-
-
-
