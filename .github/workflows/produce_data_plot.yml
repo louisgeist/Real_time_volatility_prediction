@@ -47,7 +47,7 @@ jobs:
         sudo apt-get install libcurl4-openssl-dev r-base
         R -q -e "install.packages(c('curl'))"
         Rscript -e 'install.packages(c("curl", "TTR", "quadprog", "httr", "quantmod", "timeDate", "plyr", "mfGARCH", "rugarch"))'
-        Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred"))'
+        Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred", "abind"))'
 
     - name: Execute R script
       run: Rscript daily_routine_v2.R
