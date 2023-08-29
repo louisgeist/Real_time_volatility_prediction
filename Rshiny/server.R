@@ -16,7 +16,7 @@ source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
 source("../forecast.R") # to import the function seq_quotation_date
 
-five_min_data = read_excel("../data_eikon/spx_18_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+five_min_data = read_excel("../data_eikon/spx_29_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
 df_RV = compute_realized_volatility(five_min_data)
 
 #-------- server logic --------
@@ -51,7 +51,7 @@ function(input, output, session) {
     df = as.data.frame(forecast_array %>% t())
     
     names(df) <- x$models
-    df$date <- seq_quotation_date(input$origin_date, max(x$h_list))[1:max(x$h_list)]
+    df$date <- seq_quotation_date(input$origin_date, max(x$h_list))[2:(max(x$h_list)+1)] # origin_date -> last date of training
 
     return(df)
   })
@@ -95,7 +95,7 @@ function(input, output, session) {
 
     # gray area
     main_plot = main_plot %>%
-      add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date - days(1)), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
+      add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
                   fillcolor = "rgba(211, 211, 211, 0.3)", line = list(color = "rgba(211, 211, 211, 0.5)"),
                   name = "Grayed Area")
     
@@ -130,7 +130,7 @@ function(input, output, session) {
      p
   })
 
-  
+  # validation tables
   output$error_array <- renderTable({
     error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean
   }, rownames = TRUE)
@@ -138,6 +138,7 @@ function(input, output, session) {
   output$min_array <- renderTable({
     error_array_analysis(error_array()$error_array, error_array()$models, error_array()$h_list)$error_mean_min
   }, rownames = TRUE) #, spacing = "l"
+  
   
   output$tab_main_index<- renderUI({
     return(error_array()$main_index)

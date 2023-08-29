@@ -58,7 +58,9 @@ fluidPage(
       )
   ),
   
+  #### PANEL VALIDATION
   h1("Models evaluation"),
+  
   
   tags$style("
     .parameter-list {
