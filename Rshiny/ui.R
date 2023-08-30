@@ -16,6 +16,7 @@ fluidPage(
   ##### SIDE BAR LAYOUT
   sidebarLayout(
     sidebarPanel(
+      
       wellPanel(
         dateInput(
           "origin_date",
@@ -28,7 +29,7 @@ fluidPage(
           weekstart = 1
         ),
         
-        
+       
         # sliderInput : button to slide
         # numericInput : number to type
         sliderInput(
@@ -42,6 +43,9 @@ fluidPage(
         checkboxGroupInput("models", "Choose the models used for volatility forecast :", 
                            choices = list_models,
                            selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust")),
+        
+        em("'GM' stands for GARCH-MIDAS."),
+        em("The name after 'GM' are the explanatory variables."),
         
         checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE, width = "4000px")
         ),
@@ -113,8 +117,8 @@ fluidPage(
   ),
   
   fluidRow(
-    column(width = 6, h1("QLIKE mean error"), tableOutput("error_array")),
-    column(width = 6, h1("Minimum mean error"), tableOutput("min_array"))
+    column(width = 6, h3("QLIKE mean error"), tableOutput("error_array")),
+    column(width = 6, h3("Minimum mean error"), tableOutput("min_array"))
   )
 
 )

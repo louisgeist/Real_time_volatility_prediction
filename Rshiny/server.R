@@ -97,7 +97,8 @@ function(input, output, session) {
   output$plot <- renderPlotly({
 
     
-    
+    colors <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b",
+                "#e377c2", "#7f7f7f", "#bcbd22", "#17becf", "#ff9896", "#aec7e8")
 
     
     ### PLOT
@@ -105,9 +106,10 @@ function(input, output, session) {
     
     for(i in seq_along(input$models)){
       new_model = input$models[[i]]
+      model_color = colors[[i]]
       
       # point forecast
-      main_plot = main_plot %>% add_markers(data = df_filtered(), x= ~date, y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
+      main_plot = main_plot %>% add_markers(data = df_filtered(), x= ~date, y = as.formula(paste0("~", new_model)), name = new_model,marker = list(color = model_color)) #, line = list(color = color_palette[i])
       # "add_lines"
       
       # confidence interval
@@ -115,21 +117,23 @@ function(input, output, session) {
         main_plot = main_plot %>% add_ribbons(data = df_ic_reactive(),
                                               x = ~date,
                                               ymin = as.formula(paste0("~lower_",new_model)),
-                                              ymax = as.formula(paste0("~upper_",new_model))
+                                              ymax = as.formula(paste0("~upper_",new_model)),
+                                              fillcolor = paste0(model_color, "22"), #suffix 22 in order to reduce opacity,
+                                              line = list(color = model_color, width = 0.2),
+                                              showlegend = FALSE
                                               )
       }
       
     }
     
     # real volatility
-    main_plot = main_plot %>% add_markers(data = df_RV, x = ~date, y = ~RV, line = list(color = "black"), name = "Real volatility")
-      # add_lines instead of add_markers to remove the red points
+    main_plot = main_plot %>% add_markers(data = df_RV, x = ~date, y = ~RV, line = list(color = "black", width = 1), marker = list(color = "red",width = 1), name = "Real volatility") # add_lines instead of add_markers to remove the red points
 
     # gray area
     main_plot = main_plot %>%
       add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered()[df_filtered()$date <= input$origin_date, ],
                   fillcolor = "rgba(211, 211, 211, 0.3)", line = list(color = "rgba(211, 211, 211, 0.5)"),
-                  name = "Grayed Area")
+                  name = "Training period")
     
 
     # caption
@@ -146,7 +150,7 @@ function(input, output, session) {
     
     p = plot_ly(df_training_data(), x = ~date, y = ~get(input$explanatory_variable), type = 'scatter', mode = 'lines')
     
-    p <- p %>% layout(title = "Explanatory variable (should be enough 'smooth')",
+    p <- p %>% layout(title = "Explanatory variable",
                       xaxis = list(title = "Date"),
                       yaxis = list(title = input$explanatory_variable))
     
