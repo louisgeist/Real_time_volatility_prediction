@@ -21,14 +21,14 @@ source("../forecast.R") # to import the function seq_quotation_date
 five_min_data = read_excel("../data_eikon/spx_29_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
 df_RV = compute_realized_volatility(five_min_data)
 
-quantile_array <- readRDS("../data_daily_forecast/quantile_array.rds")
+quantile_array <- readRDS("../data_daily_forecast/spx/quantile_array.rds")
 
 #-------- server logic --------
 function(input, output, session) {
   
   ### reactive dataframes 
   df_training_data = reactive({
-    location_training_data = paste0("../data_daily_forecast/training_data.csv")
+    location_training_data = paste0("../data_daily_forecast/spx/training_data.csv")
     
     df = read.csv(file = location_training_data) %>% mutate(date = ymd(date))
     return(df)
@@ -36,7 +36,7 @@ function(input, output, session) {
   
 
   df_forecasts = reactive({
-    xt = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
+    xt = readRDS(paste0("../data_daily_forecast/spx/", input$origin_date,"_forecast.RDS"))
     
     forecast_array = xt$forecast_array %>% drop() # "drop()" removes the dimension 1 of the array
     df = as.data.frame(forecast_array %>% t())
@@ -48,7 +48,7 @@ function(input, output, session) {
   })
   
   x_forecast = reactive({
-    x_f = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
+    x_f = readRDS(paste0("../data_daily_forecast/spx/", input$origin_date,"_forecast.RDS"))
     return(x_f)    
   })
   

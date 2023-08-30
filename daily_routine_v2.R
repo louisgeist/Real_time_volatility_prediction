@@ -13,7 +13,7 @@ library(rugarch)
 # ----- Parameters -----
 origin_date = today()-days(1) # attention pour la génération de données : il y aura un décallage avec les dates, revenir à la version du script du 26/08/2023 (cad enlever le "-days(1)" - pour le en temps réel, il faut le mettre, car en lançant le script le 29/08 matin, j'ai pas encore les données du 29 août...)
 
-main_index = "spx" # "spx" or "ndx" are the main index which are currently avaible
+main_index = "spx" # "spx" or "ndx" are the main index which are avaible
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = 1:66 #c(1, 2, 5, 10, 22, 44, 66)
@@ -120,8 +120,12 @@ x = list(forecast_array = forecast_array,
          origin_date = origin_date
 )
 
+if(main_index == "spx"){
+  saveRDS(x, file = paste0("./data_daily_forecast/spx/",origin_date,"_forecast.rds"))
+}else{
+  saveRDS(x, file = paste0("./data_daily_forecast/ndx/",origin_date,"_forecast.rds"))
+}
 
-saveRDS(x, file = paste0("./data_daily_forecast/",origin_date,"_forecast.rds"))
 
 ## ii) training data save
 df_training_data = df_main_index
@@ -134,4 +138,10 @@ for(index in index_list){
 }
 
 df_training_data = df_training_data %>% select(c("date", main_index ,index_list)) # in order to remove the "year_month" or "year_week" variables
-write_csv(df_training_data, "./data_daily_forecast/training_data.csv")
+
+
+if(main_index == "spx"){
+  write_csv(df_training_data, "./data_daily_forecast/spx/training_data.csv")
+}else{
+  write_csv(df_training_data, "./data_daily_forecast/ndx/training_data.csv")
+}
