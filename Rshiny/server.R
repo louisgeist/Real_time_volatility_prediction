@@ -12,7 +12,7 @@ library(tidyverse)
 library(RColorBrewer)
 library(plyr)
 
-list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11") # also in ui.R
+list_models = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci", "GARCH11")
 
 source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
@@ -36,20 +36,20 @@ function(input, output, session) {
   
 
   df_forecasts = reactive({
-    x = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
+    xt = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
     
-    forecast_array = x$forecast_array %>% drop() # "drop()" removes the dimension 1 of the array
+    forecast_array = xt$forecast_array %>% drop() # "drop()" removes the dimension 1 of the array
     df = as.data.frame(forecast_array %>% t())
     
-    names(df) <- x$models
-    df$date <- seq_quotation_date(input$origin_date, max(x$h_list))[2:(max(x$h_list)+1)] # origin_date -> last date of training
+    names(df) <- xt$models
+    df$date <- seq_quotation_date(input$origin_date, max(xt$h_list))[2:(max(xt$h_list)+1)] # origin_date -> last date of training
 
     return(df)
   })
   
   x_forecast = reactive({
-    x = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
-    return(x)    
+    x_f = readRDS(paste0("../data_daily_forecast/", input$origin_date,"_forecast.RDS"))
+    return(x_f)    
   })
   
   error_array = reactive({
@@ -59,49 +59,64 @@ function(input, output, session) {
     return(x)
   })
   
+  # adjustement according to the forecast horizon
+  df_filtered <- reactive({df_forecasts()[1:input$horizon, ]})
   
+  ### confidence interval - data frame building
+  h_max_ci <- dim(quantile_array)[[3]]
+  
+  df_quantile_low = as.data.frame(quantile_array[1,,] %>% t())
+  df_quantile_up = as.data.frame(quantile_array[2,,] %>% t())
+  
+  
+   df_ic_reactive <- reactive({
+     req(df_filtered(), df_quantile_low, df_quantile_up, list_models)
+     
+     #lower bounds
+     df_filtered_lowq <- df_quantile_low *(df_filtered()[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
+     names(df_filtered_lowq) <- list_models
+     df_filtered_lowq <- df_filtered_lowq %>% rename_all(~ paste0("lower_",.))
+     
+     #upper bounds
+     df_filtered_upq <- df_quantile_up *(df_filtered()[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
+     names(df_filtered_upq) <- list_models
+     df_filtered_upq <- df_filtered_upq %>% rename_all(~ paste0("upper_",.))
+     
+     
+     
+     df_ic <- df_filtered_lowq %>% cbind(df_filtered_upq)
+     df_ic$date <- df_filtered()$date[1:h_max_ci]
+     
+     print(df_ic)
+     return(df_ic)
+   })
+  
+  #print(df_ic_reactive())
   
   ### reactive plots
   output$plot <- renderPlotly({
 
     
-    # adjustement according to the forecast horizon
-    df_filtered <- df_forecasts()[1:input$horizon, ]
     
-    ### confidence interval - data frame building
-    h_max_ci <- dim(quantile_array)[[3]]
 
-    #lower bounds
-    df_quantile = as.data.frame(quantile_array[1,,] %>% t())
-    df_filtered_lowq <- df_quantile *(df_filtered[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
-    names(df_filtered_lowq) <- list_models
-    df_filtered_lowq <- df_filtered_lowq %>% rename_all(~ paste0("lower_",.))
-    #upper bounds
-    df_quantile = as.data.frame(quantile_array[2,,] %>% t())
-    df_filtered_upq <- df_quantile *(df_filtered[1:h_max_ci,1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
-    names(df_filtered_upq) <- list_models
-    df_filtered_upq <- df_filtered_upq %>% rename_all(~ paste0("upper_",.))
-
-    
-    df_ic <- df_filtered_lowq %>% cbind(df_filtered_upq)# %>% cbind(df_filtered)
-    df_ic$date <- df_filtered$date[1:h_max_ci]
     
     ### PLOT
-    main_plot = plot_ly(df_filtered, x = ~date)
+    main_plot = plot_ly(x = ~df_filtered()$date)
     
     for(i in seq_along(input$models)){
       new_model = input$models[[i]]
       
       # point forecast
-      main_plot = main_plot %>% add_markers(data = df_filtered, y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
+      main_plot = main_plot %>% add_markers(data = df_filtered(), x= ~date, y = as.formula(paste0("~", new_model)), name = new_model) #, line = list(color = color_palette[i])
       # "add_lines"
       
       # confidence interval
       if(input$bool_ic){
-        main_plot = main_plot %>% add_ribbons(data = df_ic,
+        main_plot = main_plot %>% add_ribbons(data = df_ic_reactive(),
                                               x = ~date,
                                               ymin = as.formula(paste0("~lower_",new_model)),
-                                              ymax = as.formula(paste0("~upper_",new_model)))
+                                              ymax = as.formula(paste0("~upper_",new_model))
+                                              )
       }
       
     }
@@ -112,7 +127,7 @@ function(input, output, session) {
 
     # gray area
     main_plot = main_plot %>%
-      add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered[df_filtered$date <= input$origin_date, ],
+      add_ribbons(x = c(df_RV$date[[1]], x_forecast()$origin_date), ymin = 0, ymax = max(df_RV$RV*1.01), data = df_filtered()[df_filtered()$date <= input$origin_date, ],
                   fillcolor = "rgba(211, 211, 211, 0.3)", line = list(color = "rgba(211, 211, 211, 0.5)"),
                   name = "Grayed Area")
     

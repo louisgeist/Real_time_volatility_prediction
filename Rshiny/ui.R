@@ -39,11 +39,11 @@ fluidPage(
           max = 80
         ),
         
-        checkboxGroupInput("models", "Choose the displayed models :", 
+        checkboxGroupInput("models", "Choose the models used for volatility forecast :", 
                            choices = list_models,
                            selected = c("GM_dhoust", "GM_vix", "GM_vix_dhoust")),
         
-        checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE,width = "4000px")
+        checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE, width = "4000px")
         ),
       wellPanel(
       
