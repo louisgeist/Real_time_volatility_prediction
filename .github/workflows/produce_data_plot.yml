@@ -50,7 +50,7 @@ jobs:
         Rscript -e 'install.packages(c("tseries", "dplyr", "tidyr", "zoo", "lubridate", "readr", "ggplot2", "alfred", "abind"))'
 
     - name: Execute R script
-      run: Rscript daily_routine_v2.R
+      run: Rscript daily_routine_launcher.R
 
     - name : Commit files
       env :
