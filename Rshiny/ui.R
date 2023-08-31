@@ -18,6 +18,10 @@ fluidPage(
     sidebarPanel(
       
       wellPanel(
+        radioButtons("main_index", label = "Choose the index to be predicted : ",
+                     choices = c("S&P 500" = "spx", "NASDAQ-100" = "ndx"),
+                     selected = "spx"),
+        
         dateInput(
           "origin_date",
           "Date of data download :",
@@ -94,7 +98,7 @@ fluidPage(
       tags$li(
         class = "parameter-item",
         tags$span("Main index : ", class = "parameter-label"), 
-        uiOutput("tab_main_index")
+      uiOutput("tab_main_index")
       ),
       tags$li(
         class = "parameter-item",
