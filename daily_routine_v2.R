@@ -144,7 +144,7 @@ for(index in index_list){
 
 df_training_data = df_training_data %>% select(c("date", main_index ,index_list)) # in order to remove the "year_month" or "year_week" variables
 
-write_csv(df_training_data, "./data_daily_forecast/",main_index,"/training_data.csv")
+write_csv(df_training_data, paste0("./data_daily_forecast/",main_index,"/training_data.csv"))
 
 ## iii) GM_models_save
 models_to_save = list()
