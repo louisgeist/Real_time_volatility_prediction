@@ -18,9 +18,8 @@ boosted_forecast = function(model_index,
   if (is.null(df_epsilon)) {
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
-
-  date_list <-
-    seq_quotation_date(data_last_date, n_forecasts - 1) # origin date for predictions
+  
+  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # origin date for predictions
   
   # compute of all the tau
   list_tau_t = double(n_forecasts)
@@ -66,7 +65,7 @@ boosted_forecast = function(model_index,
   # compute of all the g
   delta = alpha + gamma / 2 + beta
   
-  print(df_epsilon %>%  tail())
+  
   
   df_epsilon_for_g_computation = df_epsilon %>%  filter(date >= date_list[[1]]) %>% head(n_forecasts) # on a les valeurs depuis le 31/12/2014, dernier jour du train set
   
