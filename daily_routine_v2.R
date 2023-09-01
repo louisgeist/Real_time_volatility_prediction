@@ -144,9 +144,12 @@ for(index in index_list){
 
 df_training_data = df_training_data %>% select(c("date", main_index ,index_list)) # in order to remove the "year_month" or "year_week" variables
 
+write_csv(df_training_data, "./data_daily_forecast/",main_index,"/training_data.csv")
 
-if(main_index == "spx"){
-  write_csv(df_training_data, "./data_daily_forecast/spx/training_data.csv")
-}else{
-  write_csv(df_training_data, "./data_daily_forecast/ndx/training_data.csv")
+## iii) GM_models_save
+models_to_save = list()
+
+for(model in GM_models_list){
+  models_to_save[[model]] <- get(model)
 }
+saveRDS(models_to_save, file = paste0("./data_daily_forecast/",main_index,"/",origin_date,"_GM_models.rds"))
