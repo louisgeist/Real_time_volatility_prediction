@@ -68,7 +68,7 @@ import_spx <- function() {
     get.hist.quote(
       instrument = "^GSPC",
       start = as.Date("1971-01-01"),
-      end = final_date,
+      end = final_date + days(2),
       quote = "Close"
     )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -85,7 +85,7 @@ import_ndx <- function() {
     get.hist.quote(
       instrument = "^NDX",
       start = as.Date("1971-01-01"),
-      end = final_date,
+      end = final_date + days(2),
       quote = "Close"
     )
   ndx.ret = 100 * diff(log(ndx.raw)) #stationary times series
@@ -109,7 +109,7 @@ import_Rvol22 <- function() {
     get.hist.quote(
       instrument = instrument,
       start = as.Date("1971-01-01"),
-      end = final_date,
+      end = final_date + days(2),
       quote = "Close"
     )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -132,7 +132,7 @@ import_vix <- function() {
   vix.raw = get.hist.quote(
     instrument = vix_name,
     start = as.Date("1990-01-01"),
-    end = final_date,
+    end = final_date + days(2),
     quote = "Close"
   )
   sum(is.na(vix.raw$Close)) #numbers of NA 1990 to 09/06/2023 (for the s&p VIX): 299
@@ -159,7 +159,7 @@ import_vrp <- function() {
   spx.raw = get.hist.quote(
     instrument = instrument,
     start = as.Date("1971-01-01"),
-    end = final_date,
+    end = final_date + days(2),
     quote = "Close"
   )
   spx.ret = 100 * diff(log(spx.raw)) #stationary times series
@@ -168,6 +168,7 @@ import_vrp <- function() {
   vix.raw = get.hist.quote(
     instrument = vix_name,
     start = as.Date("1990-01-01"),
+    end = final_date + days(2), #01/09 add
     quote = "Close"
   )
   

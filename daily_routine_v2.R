@@ -29,7 +29,7 @@ if( wday(origin_date) %in% c(1,7)){ # saturday & sunday morning : no new data
    
 
 # ----- 1. Data import -----
-final_date = origin_date + days(2) #because strange shift of 2 days in get.hist.quote functions
+final_date = origin_date
 source("./data_import.R")
 
 # ------ 2. Training ------
