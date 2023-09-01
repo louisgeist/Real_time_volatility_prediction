@@ -142,7 +142,8 @@ for (model_index in seq_along(GM_models_list)) {
                                     h_list,
                                     n_forecasts,
                                     df_main_index,
-                                    df_long_term1 = get(paste0("df_", var_names[[2]])))
+                                    df_long_term1 = get(paste0("df_", var_names[[2]])),
+                                    estimation_last_date = date_end_training)
     
     
   } else if (length(var_names) == 3) {
@@ -153,7 +154,8 @@ for (model_index in seq_along(GM_models_list)) {
       n_forecasts,
       df_main_index,
       df_long_term1 = get(paste0("df_", var_names[[3]])),
-      df_long_term2 = get(paste0("df_", var_names[[2]]))
+      df_long_term2 = get(paste0("df_", var_names[[2]])),
+      estimation_last_date = date_end_training
     )
     
   } else{
