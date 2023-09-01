@@ -12,7 +12,7 @@ library(rugarch)
 library(pracma)
 
 # ----- Parameters -----
-main_index = "spx" # watch out : at the moment, ndx cannot be used, because we don't have the real values of ndx volatility
+main_index = "spx" # WATCH OUT : at the moment, ndx cannot be used, because we don't have the real values of ndx volatility
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
@@ -143,7 +143,7 @@ for (model_index in seq_along(GM_models_list)) {
                                     n_forecasts,
                                     df_main_index,
                                     df_long_term1 = get(paste0("df_", var_names[[2]])),
-                                    estimation_last_date = date_end_training)
+                                    data_last_date = date_end_training)
     
     
   } else if (length(var_names) == 3) {
@@ -155,7 +155,7 @@ for (model_index in seq_along(GM_models_list)) {
       df_main_index,
       df_long_term1 = get(paste0("df_", var_names[[3]])),
       df_long_term2 = get(paste0("df_", var_names[[2]])),
-      estimation_last_date = date_end_training
+      data_last_date = date_end_training
     )
     
   } else{
@@ -251,6 +251,6 @@ x = list(error_array = error_array,
          )
 
 saveRDS(x, file = "./data_error_array/error_array.rds")
-source(file = "./qlike.error_analysis.R")
 
+source(file = "./qlike.error_analysis.R")
 error_array_analysis(x$error_array, x$models, x$h_list)
