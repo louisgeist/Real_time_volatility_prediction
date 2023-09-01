@@ -11,6 +11,8 @@ library(mfGARCH)
 library(rugarch)
 library(pracma)
 
+# README : The working directory must be "Real_time_volatility_prediction"
+
 # ----- Parameters -----
 main_index = "spx" # WATCH OUT : at the moment, ndx cannot be used, because we don't have the real values of ndx volatility
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
@@ -250,7 +252,7 @@ x = list(error_array = error_array,
          cum_evaluation = cum_evaluation
          )
 
-saveRDS(x, file = "./data_error_array/error_array.rds")
+saveRDS(x, file = paste0("./data_error_array/error_array",length(list.files("./data_error_array/"))+1,".rds"))
 
 source(file = "./qlike.error_analysis.R")
 error_array_analysis(x$error_array, x$models, x$h_list)
