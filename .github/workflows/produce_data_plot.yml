@@ -1,11 +1,11 @@
 name: R Script
 
 on:
-#   schedule:
-#    - cron: "40 6 * * *"
-  push:
-    branches:
-      - main
+   schedule:
+    - cron: "40 6 * * *"
+#  push:
+#    branches:
+#      - main
 
 permissions : 
   contents: write
