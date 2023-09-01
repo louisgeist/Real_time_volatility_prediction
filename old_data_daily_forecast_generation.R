@@ -2,9 +2,13 @@ library(lubridate)
 library(tidyr)
 source("./forecast.R")
 
-initial_date = ymd("2023-04 -01")
-last_date = today()
+# ---- Parameters ----
+main_index = "ndx"
 
+initial_date = ymd("2023-08-29")
+last_date = today() - days(1)
+
+# ---- Script -----
 n = (seq_quotation_date(initial_date = initial_date, h = 100) <= last_date) %>% sum()
 
 list_origin_date = seq_quotation_date(initial_date = initial_date, h = n-1)
