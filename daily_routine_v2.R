@@ -11,7 +11,7 @@ library(mfGARCH)
 library(rugarch)
 
 # ----- Parameters -----
-origin_date = today()-days(1) # attention pour la génération de données : il y aura un décallage avec les dates, revenir à la version du script du 26/08/2023 (cad enlever le "-days(1)" - pour le en temps réel, il faut le mettre, car en lançant le script le 29/08 matin, j'ai pas encore les données du 29 août...)
+origin_date = today() - days(1) # so that at any hour of the day n+1, if we run this script, we got all the data from the date n
 
 main_index = "spx" # "spx" or "ndx" are the main index which are avaible
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
@@ -29,7 +29,7 @@ if( wday(origin_date) %in% c(1,7)){ # saturday & sunday morning : no new data
    
 
 # ----- 1. Data import -----
-final_date = origin_date
+final_date = origin_date + days(2) #because strange shift of 2 days in get.hist.quote functions
 source("./data_import.R")
 
 # ------ 2. Training ------
@@ -71,7 +71,8 @@ for (model_index in seq_along(GM_models_list)) {
                                     h_list,
                                     n_forecasts,
                                     df_main_index,
-                                    df_long_term1 = get(paste0("df_", var_names[[2]])))
+                                    df_long_term1 = get(paste0("df_", var_names[[2]])),
+                                    data_last_date = date_end_training)
     
     
   } else if (length(var_names) == 3) {
@@ -82,7 +83,8 @@ for (model_index in seq_along(GM_models_list)) {
       n_forecasts,
       df_main_index,
       df_long_term1 = get(paste0("df_", var_names[[3]])),
-      df_long_term2 = get(paste0("df_", var_names[[2]]))
+      df_long_term2 = get(paste0("df_", var_names[[2]]),
+      estimation_last_date = date_end_training)
     )
     
   } else{
