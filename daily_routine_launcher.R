@@ -1,3 +1,5 @@
+origin_date = today() - days(1)
+
 main_index = "spx"
 source("./daily_routine_v2.R")
 

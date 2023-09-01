@@ -11,9 +11,12 @@ library(mfGARCH)
 library(rugarch)
 
 # ----- Parameters -----
-origin_date = today() - days(1) # so that at any hour of the day n+1, if we run this script, we got all the data from the date n
+## These first 2 parameters (origin_date & main_index) are now usually 
+## initialized in an other scrip that calls daily_routine_v2.R.
 
-main_index = "spx" # "spx" or "ndx" are the main index which are avaible
+#origin_date = today() - days(1) # so that at any hour of the day n+1, if we run this script, we got all the data from the date n
+#main_index = "spx" # "spx" or "ndx" are the main index which are avaible
+
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = 1:66 #c(1, 2, 5, 10, 22, 44, 66)
@@ -72,7 +75,7 @@ for (model_index in seq_along(GM_models_list)) {
                                     n_forecasts,
                                     df_main_index,
                                     df_long_term1 = get(paste0("df_", var_names[[2]])),
-                                    data_last_date = date_end_training)
+                                    data_last_date = date_end_training )
     
     
   } else if (length(var_names) == 3) {
@@ -83,9 +86,9 @@ for (model_index in seq_along(GM_models_list)) {
       n_forecasts,
       df_main_index,
       df_long_term1 = get(paste0("df_", var_names[[3]])),
-      df_long_term2 = get(paste0("df_", var_names[[2]]),
-      estimation_last_date = date_end_training)
-    )
+      df_long_term2 = get(paste0("df_", var_names[[2]])),
+      data_last_date = date_end_training
+      )
     
   } else{
     print(paste0("Model name : ", model))
