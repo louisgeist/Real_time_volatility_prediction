@@ -156,14 +156,14 @@ import_vrp <- function() {
     stop("Please enter a correct main_index name (spx or ndx in char)")
   }
   
-  spx.raw = get.hist.quote(
+  main_index.raw = get.hist.quote(
     instrument = instrument,
     start = as.Date("1971-01-01"),
     end = final_date + days(2),
     quote = "Close"
   )
-  spx.ret = 100 * diff(log(spx.raw)) #stationary times series
-  Rvol22 = zoo::rollmean(spx.ret ** 2, 22, align = "right") #the current value and the past 21 values are taken for the mean
+  main_index.ret = 100 * diff(log(main_index.raw)) #stationary times series
+  Rvol22 = zoo::rollmean(main_index.ret ** 2, 22, align = "right") #the current value and the past 21 values are taken for the mean
   
   vix.raw = get.hist.quote(
     instrument = vix_name,
