@@ -1,3 +1,5 @@
+library(lubridate)
+
 origin_date = today() - days(1)
 
 main_index = "spx"
