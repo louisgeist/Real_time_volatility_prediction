@@ -34,7 +34,7 @@ source("../forecast.R") # to import the function seq_quotation_date
 
 #-------- server logic --------
 function(input, output, session) {
-  ### path according to main_index
+  # ---- I. Load of the data according to inputs ----
   
   five_min_data <- reactive({
     if(input$main_index == "spx") {
@@ -63,6 +63,9 @@ function(input, output, session) {
     return(df)
   })
   
+  GM_active_models = reactive({
+    readRDS(paste0("../data_daily_forecast/",input$main_index,"/",input$origin_date,"_GM_models.rds"))
+  })
   
   df_forecasts = reactive({
     x = readRDS(paste0("../data_daily_forecast/",input$main_index,"/",input$origin_date,"_forecast.RDS" ))
@@ -83,7 +86,7 @@ function(input, output, session) {
   })
   
   error_array = reactive({
-    x = readRDS("../data_error_array/error_array1.rds")
+    x = readRDS(paste0("../data_error_array/error_array",input$index_data_error_array,".rds"))
     return(x)
   })
   
@@ -93,19 +96,22 @@ function(input, output, session) {
   })
   
   ### confidence interval - data frame building
-  h_max_ci <- reactive({dim(quantile_array())[[3]]})
+  h_max_ci <- reactive({dim(quantile_array())[[2]]})
   
   df_quantile_low = reactive({
-    as.data.frame(quantile_array()[1, , ] %>% t())
+    as.data.frame(quantile_array()[ , ,1] %>% t())
   })
   
   df_quantile_up = reactive({
-    as.data.frame(quantile_array()[2, , ] %>% t())
+    as.data.frame(quantile_array()[ , ,2] %>% t())
   })
   
   
   df_ic_reactive <- reactive({
     #lower bounds
+    print(dim(df_quantile_low()))
+    print(dim((df_filtered()[1:h_max_ci(), 1:length(list_models)])))
+    
     df_filtered_lowq <- reactive({
       x_df = df_quantile_low() * (df_filtered()[1:h_max_ci(), 1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
       names(x_df) <- list_models
@@ -132,7 +138,7 @@ function(input, output, session) {
   })
 
   
-  # II. REACTIVE PLOTS
+  # ----- II. REACTIVE PLOTS----
   output$plot <- renderPlotly({
     colors <-
       c(
@@ -182,6 +188,7 @@ function(input, output, session) {
         )
       }
       
+      
     }
     
     # real volatility
@@ -211,7 +218,9 @@ function(input, output, session) {
     main_plot = main_plot %>%
       layout(
         title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
-        xaxis = list(title = "Date"),
+        xaxis = list(title = "Date",
+                     type = "date",
+                     domain = df_filtered()$date),
         yaxis = list(title = "Volatility")
       )
     
@@ -220,19 +229,52 @@ function(input, output, session) {
   
   
   output$plot_training_data <- renderPlotly({
-    p = plot_ly(
+
+    variables = unlist(strsplit(input$explanatory_variable_model, "_"))[-1]
+
+    GM_chosen_model <- GM_active_models()[[input$explanatory_variable_model]]
+    df_tau = GM_chosen_model$df.fitted %>% select(c("date","tau")) %>% drop_na()
+    
+    p <- plot_ly(
       df_training_data(),
       x = ~ date,
-      y = ~ get(input$explanatory_variable),
+      y = ~ get(variables[1]), #that gives the name of the yaxis
       type = 'scatter',
-      mode = 'lines'
+      mode = 'lines',
+      name = variables[1],
+      yaxis = "y1"
     )
     
-    p <- p %>% layout(
-      title = "Explanatory variable",
-      xaxis = list(title = "Date"),
-      yaxis = list(title = input$explanatory_variable)
+    p <- p %>%  add_trace(
+      data = df_tau,
+      x = ~date,
+      y = ~tau,
+      type = 'scatter',
+      mode = 'lines',
+      name = "tau",
+      yaxis = "ytau"
     )
+    
+    if(length(variables)==2){
+      p <- p %>%  add_trace(
+        df_training_data(),
+        x = ~ date,
+        y = ~ get(variables[2]),
+        type = 'scatter',
+        mode = 'lines',
+        name = variables[2],
+        yaxis = "y2"
+      )
+      
+      #layout <- list(
+      #  yaxis = list(title = "Variable 1", side = "left", position = 0.1),
+      #  yaxis2 = list(title = "Variable tau", overlaying = "y", side = "right", position = 0.9),
+      #  yaxis3 = list(title = "Variable 2", overlaying = "y", side = "left", position = 0.95)
+      #)
+
+    }
+    
+    #p <- p %>% layout(layout)
     
     p
     
@@ -247,7 +289,7 @@ function(input, output, session) {
     ) %>%
       layout(
         title = "S&p500 (at closing)",
-        xaxis = list(title = "Date"),
+        xaxis = list(title = "Date",xmin = ymd("1990-01-01")),
         yaxis = list(title = "Close value")
       )
     p

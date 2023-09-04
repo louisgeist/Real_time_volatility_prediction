@@ -56,10 +56,10 @@ fluidPage(
       wellPanel(
       
       
-      selectInput("explanatory_variable",
-                  "Explanatory variable :",
-                  choices = c("Rvol22","vix","vrp","nfci","dhoust","ip","nai"),
-                  selected = "dhoust")
+      selectInput("explanatory_variable_model",
+                  "Explanatory variable of model :" ,
+                  choices = list_models,
+                  selected = "GM_dhoust")
       )
     ),
     
@@ -74,6 +74,7 @@ fluidPage(
   #### PANEL VALIDATION
   h1("Models evaluation"),
   
+  numericInput("index_data_error_array", "Change all the parameters below : ", value = 1, min = 1, max = length(list.files("../data_error_array"))),
   
   tags$style("
     .parameter-list {
