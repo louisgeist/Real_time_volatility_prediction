@@ -238,7 +238,7 @@ function(input, output, session) {
     p <- plot_ly(
       df_training_data(),
       x = ~ date,
-      y = ~ get(variables[1]), #that gives the name of the yaxis
+      y = ~ get(variables[1]),
       type = 'scatter',
       mode = 'lines',
       name = variables[1],
@@ -261,25 +261,23 @@ function(input, output, session) {
       name = "tau",
       yaxis = "y2"
     )
-    
-    p <- p %>% layout(title = "Explanatory variable and its transformation",
-                      yaxis2 = ay_tau,
-                      yaxis = list(title = "yaxis of raw explanatory variables", tickfont = "blue"))
-    
     if(length(variables)==2){
       p <- p %>%  add_trace(
-        df_training_data(),
+        data = df_training_data(),
         x = ~ date,
         y = ~ get(variables[2]),
         type = 'scatter',
         mode = 'lines',
-        name = variables[2],
-        yaxis = "y2"
+        name = variables[2]
       )
       
-
-
+      
     }
+    p <- p %>% layout(title = "Explanatory variable and its transformation",
+                      yaxis2 = ay_tau,
+                      yaxis = list(title = "yaxis of raw explanatory variables", tickfont = "blue"))
+    
+    
     
     
     p
