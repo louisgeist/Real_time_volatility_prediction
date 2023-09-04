@@ -245,6 +245,13 @@ function(input, output, session) {
       yaxis = "y1"
     )
     
+    ay_tau <- list(
+      tickfont = list(color = "orange"),
+      overlaying = "y",
+      side = "right",
+      title = "yaxis for tau"
+    )
+    
     p <- p %>%  add_trace(
       data = df_tau,
       x = ~date,
@@ -252,8 +259,12 @@ function(input, output, session) {
       type = 'scatter',
       mode = 'lines',
       name = "tau",
-      yaxis = "ytau"
+      yaxis = "y2"
     )
+    
+    p <- p %>% layout(title = "Explanatory variable and its transformation",
+                      yaxis2 = ay_tau,
+                      yaxis = list(title = "yaxis of raw explanatory variables", tickfont = "blue"))
     
     if(length(variables)==2){
       p <- p %>%  add_trace(
@@ -266,15 +277,10 @@ function(input, output, session) {
         yaxis = "y2"
       )
       
-      #layout <- list(
-      #  yaxis = list(title = "Variable 1", side = "left", position = 0.1),
-      #  yaxis2 = list(title = "Variable tau", overlaying = "y", side = "right", position = 0.9),
-      #  yaxis3 = list(title = "Variable 2", overlaying = "y", side = "left", position = 0.95)
-      #)
+
 
     }
     
-    #p <- p %>% layout(layout)
     
     p
     
