@@ -26,10 +26,13 @@ date_begin_training = ymd("1991-01-05")
 date_end_training = origin_date
 
 # ---- Test -----
-if( wday(origin_date) %in% c(1,7)){ # saturday & sunday morning : no new data
-  q()
+source("./forecast.R")
+date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
+
+if(!(origin_date %in% date_to_forecast)){ # saturday & sunday morning : no new data
+  print("stop")
+  #q()
 }
-   
 
 # ----- 1. Data import -----
 final_date = origin_date
@@ -39,10 +42,9 @@ source("./data_import.R")
 source("./estimation.R")
 
 # ------ 3. Forecasts ------
-source("./forecast.R")
 source("./forecast_boosted.R")
 
-date_to_forecast = seq_quotation_date(date_end_training, n_forecasts - 1) # function implemented in forecast.R
+
 
 h_max = max(h_list)
 
