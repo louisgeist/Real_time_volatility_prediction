@@ -109,8 +109,6 @@ function(input, output, session) {
   
   df_ic_reactive <- reactive({
     #lower bounds
-    print(dim(df_quantile_low()))
-    print(dim((df_filtered()[1:h_max_ci(), 1:length(list_models)])))
     
     df_filtered_lowq <- reactive({
       x_df = df_quantile_low() * (df_filtered()[1:h_max_ci(), 1:length(list_models)]) #first slice : because CI are only computable up to h_max_ci / second slice : because last columns is the date
