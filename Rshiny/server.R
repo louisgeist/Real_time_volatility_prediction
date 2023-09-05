@@ -157,73 +157,141 @@ function(input, output, session) {
       )
     
 
-    ### PLOT
-    main_plot = plot_ly(x = ~ df_filtered()$date)
     
-    for (i in seq_along(input$models)) {
-      new_model = input$models[[i]]
-      model_color = colors[[i]]
+    if(input$bool_mult_plot){
+      ### MULTIPLE PLOT DISPLAY
+      plot_list <- list()
       
-      # point forecast
-      main_plot = main_plot %>% add_markers(
-        data = df_filtered(),
-        x = ~ date,
-        y = as.formula(paste0("~", new_model)),
-        name = new_model,
-        marker = list(color = model_color)
-      ) #, line = list(color = color_palette[i])
-      # "add_lines"
+      main_plot = plot_ly(x = ~ df_filtered()$date)
       
-      # confidence interval
-      if (input$bool_ic) {
-        main_plot = main_plot %>% add_ribbons(
-          data = df_ic_reactive(),
+      for (i in seq_along(input$models)) {
+        new_model = input$models[[i]]
+        model_color = colors[[i]]
+        
+        p = plot_ly()
+        
+        # point forecast
+        p = p %>% add_markers(
+          data = df_filtered(),
           x = ~ date,
-          ymin = as.formula(paste0("~lower_", new_model)),
-          ymax = as.formula(paste0("~upper_", new_model)),
-          fillcolor = paste0(model_color, "22"),
-          #suffix 22 in order to reduce opacity,
-          line = list(color = model_color, width = 0.2),
-          showlegend = FALSE
+          y = as.formula(paste0("~", new_model)),
+          name = new_model,
+          marker = list(color = model_color)
         )
+        
+        # confidence interval
+        if (input$bool_ic) {
+          p = p %>% add_ribbons(
+            data = df_ic_reactive(),
+            x = ~ date,
+            ymin = as.formula(paste0("~lower_", new_model)),
+            ymax = as.formula(paste0("~upper_", new_model)),
+            fillcolor = paste0(model_color, "22"),
+            #suffix 22 in order to reduce opacity,
+            line = list(color = model_color, width = 0.2),
+            showlegend = FALSE
+          )
+        }
+
+        p = p %>% add_markers(
+          data = df_RV(),
+          x = ~ date,
+          y = ~ RV,
+          line = list(color = "black", width = 1),
+          marker = list(color = "red", width = 1),
+          name = "Real volatility",
+          showlegend = FALSE
+        ) # add_lines instead of add_markers to remove the red points
+
+        # gray area
+        p = p %>% add_ribbons(
+            data = df_filtered()[df_filtered()$date <= input$origin_date,],
+            x = c(df_RV()$date[[1]], x_forecast()$origin_date),
+            ymin = 0,
+            ymax = max(df_RV()$RV * 1.01),
+            fillcolor = "rgba(211, 211, 211, 0.3)",
+            line = list(color = "rgba(211, 211, 211, 0.5)"),
+            name = "Training period",
+            showlegend = FALSE
+          )
+
+        plot_list[[i]] <- p
+
       }
+      main_plot <- subplot(plot_list, nrows = length(input$models),shareX = TRUE)
+      
+      main_plot <- main_plot %>% layout(title = "Volatility forecast from 1 day to 3 months ahead, with different models")
+      
+    }else{
+      ### ONE PLOT DISPLAY
+      
+      main_plot = plot_ly(x = ~ df_filtered()$date)
+      
+      for (i in seq_along(input$models)) {
+        new_model = input$models[[i]]
+        model_color = colors[[i]]
+        
+        # point forecast
+        main_plot = main_plot %>% add_markers(
+          data = df_filtered(),
+          x = ~ date,
+          y = as.formula(paste0("~", new_model)),
+          name = new_model,
+          marker = list(color = model_color)
+        )
+        
+        # confidence interval
+        if (input$bool_ic) {
+          main_plot = main_plot %>% add_ribbons(
+            data = df_ic_reactive(),
+            x = ~ date,
+            ymin = as.formula(paste0("~lower_", new_model)),
+            ymax = as.formula(paste0("~upper_", new_model)),
+            fillcolor = paste0(model_color, "22"),
+            #suffix 22 in order to reduce opacity,
+            line = list(color = model_color, width = 0.2),
+            showlegend = FALSE
+          )
+        }
+        
+        
+      }
+      
+      # real volatility
+      main_plot = main_plot %>% add_markers(
+        data = df_RV(),
+        x = ~ date,
+        y = ~ RV,
+        line = list(color = "black", width = 1),
+        marker = list(color = "red", width = 1),
+        name = "Real volatility"
+      ) # add_lines instead of add_markers to remove the red points
+      
+      # gray area
+      main_plot = main_plot %>%
+        add_ribbons(
+          x = c(df_RV()$date[[1]], x_forecast()$origin_date),
+          ymin = 0,
+          ymax = max(df_RV()$RV * 1.01),
+          data = df_filtered()[df_filtered()$date <= input$origin_date,],
+          fillcolor = "rgba(211, 211, 211, 0.3)",
+          line = list(color = "rgba(211, 211, 211, 0.5)"),
+          name = "Training period"
+        )
+      
+      
+      # caption
+      main_plot = main_plot %>%
+        layout(
+          title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
+          xaxis = list(title = "Date",
+                       type = "date",
+                       domain = df_filtered()$date),
+          yaxis = list(title = "Volatility")
+        )
       
       
     }
-    
-    # real volatility
-    main_plot = main_plot %>% add_markers(
-      data = df_RV(),
-      x = ~ date,
-      y = ~ RV,
-      line = list(color = "black", width = 1),
-      marker = list(color = "red", width = 1),
-      name = "Real volatility"
-    ) # add_lines instead of add_markers to remove the red points
-    
-    # gray area
-    main_plot = main_plot %>%
-      add_ribbons(
-        x = c(df_RV()$date[[1]], x_forecast()$origin_date),
-        ymin = 0,
-        ymax = max(df_RV()$RV * 1.01),
-        data = df_filtered()[df_filtered()$date <= input$origin_date,],
-        fillcolor = "rgba(211, 211, 211, 0.3)",
-        line = list(color = "rgba(211, 211, 211, 0.5)"),
-        name = "Training period"
-      )
-    
-    
-    # caption
-    main_plot = main_plot %>%
-      layout(
-        title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
-        xaxis = list(title = "Date",
-                     type = "date",
-                     domain = df_filtered()$date),
-        yaxis = list(title = "Volatility")
-      )
-    
     main_plot
   })
   
@@ -249,7 +317,7 @@ function(input, output, session) {
       tickfont = list(color = "orange"),
       overlaying = "y",
       side = "right",
-      title = "yaxis for tau"
+      title = "tau"
     )
     
     p <- p %>%  add_trace(
@@ -261,6 +329,11 @@ function(input, output, session) {
       name = "tau",
       yaxis = "y2"
     )
+    p <- p %>% layout(title = "Explanatory variable and its transformation",
+                      yaxis2 = ay_tau,
+                      yaxis = list(title = variables[1]))
+    
+    
     if(length(variables)==2){
       p <- p %>%  add_trace(
         data = df_training_data(),
@@ -271,11 +344,9 @@ function(input, output, session) {
         name = variables[2]
       )
       
+      p <- p %>% layout(yaxis = list(title = paste0(variables[1]," and ", variables[2])))
       
     }
-    p <- p %>% layout(title = "Explanatory variable and its transformation",
-                      yaxis2 = ay_tau,
-                      yaxis = list(title = "yaxis of raw explanatory variables", tickfont = "blue"))
     
     
     

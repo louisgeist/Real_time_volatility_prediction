@@ -1,10 +1,16 @@
 #
 # user interface for real time volatility forecast
 #
-
 library(shiny)
 library(plotly)
 library(lubridate)
+
+source("../forecast.R")
+quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
+quota_days = quota_days[quota_days < today()]
+all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
+no_quota_days = all_days[!(all_days %in% quota_days)]
+
 
 list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11") # also in server.R
 
@@ -22,14 +28,15 @@ fluidPage(
                      choices = c("S&P 500" = "spx", "NASDAQ-100" = "ndx"),
                      selected = "spx"),
         
+        
         dateInput(
           "origin_date",
           "Date of data download :",
-          value = floor_date(today()-days(1), unit = "week", week_start = 1), #default origin_date is last monday where we have prediction
+          value = quota_days[length(quota_days)], #default origin_date is last monday where we have prediction
           min = "2023-05-01",
           max = today() - days(1),
           format = "yyyy-mm-dd",
-          daysofweekdisabled = c(0,6),
+          datesdisabled = no_quota_days,
           weekstart = 1
         ),
         
@@ -51,7 +58,9 @@ fluidPage(
         em("'GM' stands for GARCH-MIDAS."),
         em("The name after 'GM' are the explanatory variables."),
         
-        checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE, width = "4000px")
+        checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE, width = "4000px"),
+        
+        checkboxInput("bool_mult_plot", "Multiple plot view", value =  FALSE, width = "4000px")
         ),
       wellPanel(
       
