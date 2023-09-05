@@ -18,6 +18,7 @@ list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "G
 fluidPage(
   titlePanel("Real time volatility forecast"),
   h1("Optimal volatility forecast with GARCH-MIDAS models"),
+
   
   ##### SIDE BAR LAYOUT
   sidebarLayout(

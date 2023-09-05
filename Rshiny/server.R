@@ -31,6 +31,11 @@ source("../qlike.error_analysis.R")
 source("../eikon_data_preprocessing.R")
 source("../forecast.R") # to import the function seq_quotation_date
 
+quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
+quota_days = quota_days[quota_days < today()]
+all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
+no_quota_days = all_days[!(all_days %in% quota_days)]
+
 
 #-------- server logic --------
 function(input, output, session) {
@@ -218,7 +223,11 @@ function(input, output, session) {
       }
       main_plot <- subplot(plot_list, nrows = length(input$models),shareX = TRUE)
       
-      main_plot <- main_plot %>% layout(title = "Volatility forecast from 1 day to 3 months ahead, with different models")
+      main_plot <- main_plot %>% layout(title = "Volatility forecast from 1 day to 3 months ahead, with different models",
+                                        xaxis = list(
+                                          rangebreaks = list(list(bounds = list("sat","mon")),
+                                                             list(values = as.character(no_quota_days))
+                                          )))
       
     }else{
       ### ONE PLOT DISPLAY
@@ -284,7 +293,10 @@ function(input, output, session) {
           title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
           xaxis = list(title = "Date",
                        type = "date",
-                       domain = df_filtered()$date),
+                       domain = df_filtered()$date,
+                       rangebreaks = list(list(bounds = list("sat","mon")),
+                                          list(values = as.character(no_quota_days))
+                       )),
           yaxis = list(title = "Volatility")
         )
       
@@ -376,9 +388,11 @@ function(input, output, session) {
   }, rownames = TRUE)
   
   output$min_array <- renderTable({
-    error_array_analysis(error_array()$error_array,
+    x = error_array_analysis(error_array()$error_array,
                          error_array()$models,
                          error_array()$h_list)$error_mean_min
+    x = ifelse(x, "True"," ")
+    x
   }, rownames = TRUE) #, spacing = "l"
   
   
