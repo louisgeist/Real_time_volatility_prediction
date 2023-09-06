@@ -1,9 +1,58 @@
 library(ggplot2)
+library(tseries)
+library(zoo)
+library(plotly)
 rm(list=ls())
 
+t <- list(size = 14)
+
+# ----- I. DATA IMPORT -----
+final_date = ymd("2023-07-01")
+main_index = "spx"
+
+## all
 source(file = "./data_import.R",local = TRUE)
+training_data = read.csv("./data_daily_forecast/spx/training_data.csv")
+
+## spx
+spx.raw <-
+  get.hist.quote(
+    instrument = "^GSPC",
+    start = as.Date("1971-01-01"),
+    end = final_date + days(1),
+    quote = "Close"
+  )
+
+spx.ret = 100 * diff(log(spx.raw)) #stationary times series
+
+## HOUST
+df_HOUST = alfred::get_alfred_series(
+  series_id = "HOUST",
+  series_name = "HOUST",
+  observation_start = "1959-01-01",
+  realtime_start = final_date,
+  realtime_end = final_date,
+  api_key = "4f77313cfd688a6d4d70ccf8e650f038"
+)
+
+df_dhoust = data.frame(date = df_HOUST$date)
+df_dhoust$value =  c(NA, 100 * diff(log(df_HOUST$HOUST)))
+
+## IP
+df_ip_raw = alfred::get_alfred_series(
+  series_id = "INDPRO",
+  series_name = "IP",
+  observation_start = "1959-01-01",
+  realtime_start = final_date,
+  realtime_end = final_date,
+  api_key = "4f77313cfd688a6d4d70ccf8e650f038"
+) %>% as_tibble() %>% select(c("date", "IP"))
+
+df_ip = data.frame(date = df_ip_raw$date)
+df_ip$value = c(NA, 100 * diff(log(df_ip_raw$IP)))
 
 ## ------- First plots ----------
+
 plot(spx.raw)
 plot(spx.ret)
 
@@ -33,29 +82,59 @@ exogeneisation_residus = function (series,specification){
   return(paste0("Presence of  d'autocorrélation trouvé jusqu'à l'ajout du lag = ",lag_max))
 }
 
-lag_spx = exogeneisation_residus(spx.ret,"nc")
-fUnitRoots::adfTest(spx.ret, lag = lag_spx, type="nc") #p-value lower than 0.01 : we reject that the series got an unit root
+lag_spx = exogeneisation_residus(training_data$spx,"nc")
+fUnitRoots::adfTest(training_data$spx, lag = lag_spx, type="nc") #p-value lower than 0.01 : we reject that the series got an unit root
 
 
 ### ------- Focus on VIX -----------
-lag_vix = exogeneisation_residus(vix.ret$Price,"c")
+lag_vix = exogeneisation_residus(training_data$vix,"c")
 
-plot(vix.ret$Date, vix.ret$Price, type = "l")
+plot(training_data$vix, type = "l")
 
-fUnitRoots::adfTest(vix.ret$Price, lag = lag_vix, type = "nc") #p_value lower than 0.01 -> vix series is stationary
+fUnitRoots::adfTest(training_data$vix, lag = lag_vix, type = "c") #p_value lower than 0.01 -> vix series is stationary
 
 ### ------- House startings ----------
 # Non diff series
+plot(df_HOUST$HOUST, type = "l")
 
-lag_houst = exogeneisation_residus(HOUST$HOUST, "c")
-fUnitRoots::adfTest(HOUST$HOUST, lag = lag_houst, type ="c")
+lag_houst = exogeneisation_residus(df_HOUST$HOUST, "c")
+fUnitRoots::adfTest(df_HOUST$HOUST, lag = lag_houst, type ="c")
+# HOUST est stationnaire (selon ADF), mais on prend quand même la différence ! 
 
-# HOUST est stationnaire, mais on prend quand même la différence ! (selon ADF)
-kpss.test(HOUST$HOUST, null = c("Level"), lshort = TRUE) #p-value lower than 0.01
-kpss.test(HOUST$HOUST, null = c("Level"), lshort = FALSE) #p-value 0.039
+kpss.test(df_HOUST$HOUST, null = c("Level")) 
 
 # dhoust
-ggplot(df_dhoust) + geom_line(aes(x = date, y = dhoust))
+ggplot(df_dhoust) + geom_line(aes(x = date, y = value))
 
-lag_dhoust = exogeneisation_residus(df_dhoust$dhoust, "nc")
-fUnitRoots::adfTest(df_dhoust$dhoust, lag = lag_houst, type ="nc") #p-value lower than 1 -> stationary
+lag_dhoust = exogeneisation_residus(df_dhoust$value, "nc")
+fUnitRoots::adfTest(df_dhoust$value, lag = lag_houst, type ="nc") #p-value lower than 1 -> stationary
+
+### --------- Industrial production ---------
+
+plot_ly(data = df_ip_raw) %>% add_lines(x = ~date, y = ~IP) %>% 
+  layout(
+    font = list(size = 24),
+    xaxis = list(title = none),
+    yaxis = list(title = none)
+    
+  ) %>% 
+  config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
+
+
+lag_ip_raw = exogeneisation_residus(df_ip_raw$IP, "ct")
+fUnitRoots::adfTest(df_ip_raw$IP, lag = lag_ip_raw, type ="ct") # p value = 0.33 -> we cannot reject UR
+
+t = kpss.test(df_HOUST$HOUST, null = c("Level"))
+
+# differenciated
+plot_ly(data = df_ip) %>% add_lines(x = ~date, y = ~value) %>% 
+  layout(
+    font = list(size = 24),
+    xaxis = list(title = none),
+    yaxis = list(title = none)
+    
+  ) %>% 
+  config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
+
+lag_ip = exogeneisation_residus(df_ip$value, "nc")
+fUnitRoots::adfTest(df_ip$value, lag = lag_ip, type ="nc") # smaller than 0.01 -> stationnary
