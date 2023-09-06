@@ -36,6 +36,11 @@ quota_days = quota_days[quota_days < today()]
 all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
 no_quota_days = all_days[!(all_days %in% quota_days)]
 
+# font
+t <- list(
+  size = 14 #,
+  #color = "blue"
+  )
 
 #-------- server logic --------
 function(input, output, session) {
@@ -224,7 +229,7 @@ function(input, output, session) {
       main_plot <- subplot(plot_list, nrows = length(input$models),shareX = TRUE)
       
       main_plot <- main_plot %>% layout(title = "Volatility forecast from 1 day to 3 months ahead, with different models",
-                                        xaxis = list(
+                                        xaxis = list(title = none,
                                           rangebreaks = list(list(bounds = list("sat","mon")),
                                                              list(values = as.character(no_quota_days))
                                           )))
@@ -291,17 +296,22 @@ function(input, output, session) {
       main_plot = main_plot %>%
         layout(
           title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
-          xaxis = list(title = "Date",
+          xaxis = list(title = none,
                        type = "date",
                        domain = df_filtered()$date,
                        rangebreaks = list(list(bounds = list("sat","mon")),
                                           list(values = as.character(no_quota_days))
                        )),
-          yaxis = list(title = "Volatility")
+          yaxis = list(title = none)
         )
       
       
     }
+    
+    main_plot = main_plot  %>% 
+      layout(font = t) %>% 
+      config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
+    
     main_plot
   })
   
@@ -341,7 +351,9 @@ function(input, output, session) {
     )
     p <- p %>% layout(title = "Explanatory variable and its transformation",
                       yaxis2 = ay_tau,
-                      yaxis = list(title = variables[1]))
+                      yaxis = list(title = variables[1]),
+                      xaxis = list(range = list(ymd("2001-01-01"), today()),
+                                   title = none))
     
     
     if(length(variables)==2){
@@ -354,7 +366,9 @@ function(input, output, session) {
         name = variables[2]
       )
       
-      p <- p %>% layout(yaxis = list(title = paste0(variables[1]," and ", variables[2])))
+      p <- p %>% layout(yaxis = list(title = paste0(variables[1]," and ", variables[2])),
+                        font = t) %>% 
+        config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
       
     }
     
@@ -369,12 +383,12 @@ function(input, output, session) {
     p = plot_ly(
       df_training_data(),
       x = ~ date,
-      y = ~ spx,
+      y = ~ get(input$main_index),
       mode = 'lines'
     ) %>%
       layout(
         title = "S&p500 (at closing)",
-        xaxis = list(title = "Date",xmin = ymd("1990-01-01")),
+        xaxis = list(xmin = ymd("1990-01-01")),
         yaxis = list(title = "Close value")
       )
     p

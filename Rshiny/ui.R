@@ -14,6 +14,7 @@ no_quota_days = all_days[!(all_days %in% quota_days)]
 
 list_models = c("GM_Rvol22","GM_vix","GM_vrp","GM_nfci","GM_dhoust", "GM_ip", "GM_nai","GM_vix_dhoust","GM_vix_nai","GM_vix_nfci","GM_vix_ip", "GARCH11") # also in server.R
 
+
 # Define UI for application that draws a histogram
 fluidPage(
   titlePanel("Real time volatility forecast"),
@@ -32,7 +33,7 @@ fluidPage(
         
         dateInput(
           "origin_date",
-          "Date of data download :",
+          "Last date of data :",
           value = quota_days[length(quota_days)], #default origin_date is last monday where we have prediction
           min = "2023-05-01",
           max = today() - days(1),
@@ -68,7 +69,7 @@ fluidPage(
       
       selectInput("explanatory_variable_model",
                   "Explanatory variable of model :" ,
-                  choices = list_models,
+                  choices = list_models[1:(length(list_models)-1)],
                   selected = "GM_dhoust")
       )
     ),
