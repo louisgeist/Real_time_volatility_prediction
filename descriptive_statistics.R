@@ -2,6 +2,8 @@ library(ggplot2)
 library(tseries)
 library(zoo)
 library(plotly)
+library(lubridate)
+library(tidyr)
 rm(list=ls())
 
 t <- list(size = 14)
@@ -86,16 +88,16 @@ lag_spx = exogeneisation_residus(training_data$spx,"nc")
 fUnitRoots::adfTest(training_data$spx, lag = lag_spx, type="nc") #p-value lower than 0.01 : we reject that the series got an unit root
 
 
-### ------- Focus on VIX -----------
-lag_vix = exogeneisation_residus(training_data$vix,"c")
-
-plot(training_data$vix, type = "l")
-
-fUnitRoots::adfTest(training_data$vix, lag = lag_vix, type = "c") #p_value lower than 0.01 -> vix series is stationary
-
 ### ------- House startings ----------
 # Non diff series
-plot(df_HOUST$HOUST, type = "l")
+plot_ly(data = df_HOUST) %>% add_lines(x = ~date, y = ~HOUST) %>% 
+  layout(
+    font = list(size = 24),
+    xaxis = list(title = NA),
+    yaxis = list(title = NA)
+    
+  ) %>% 
+  config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
 
 lag_houst = exogeneisation_residus(df_HOUST$HOUST, "c")
 fUnitRoots::adfTest(df_HOUST$HOUST, lag = lag_houst, type ="c")
@@ -104,37 +106,88 @@ fUnitRoots::adfTest(df_HOUST$HOUST, lag = lag_houst, type ="c")
 kpss.test(df_HOUST$HOUST, null = c("Level")) 
 
 # dhoust
-ggplot(df_dhoust) + geom_line(aes(x = date, y = value))
+plot_ly(data = df_dhoust) %>% add_lines(x = ~date, y = ~value) %>% 
+  layout(
+    font = list(size = 24),
+    xaxis = list(title = NA),
+    yaxis = list(title = NA)
+    
+  ) %>% 
+  config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
 
 lag_dhoust = exogeneisation_residus(df_dhoust$value, "nc")
-fUnitRoots::adfTest(df_dhoust$value, lag = lag_houst, type ="nc") #p-value lower than 1 -> stationary
+fUnitRoots::adfTest(df_dhoust$value, lag = lag_dhoust, type ="nc") #p-value lower than 0.01 -> stationary
 
+kpss.test(df_dhoust$value, null = c("Level")) 
 ### --------- Industrial production ---------
 
 plot_ly(data = df_ip_raw) %>% add_lines(x = ~date, y = ~IP) %>% 
   layout(
     font = list(size = 24),
-    xaxis = list(title = none),
-    yaxis = list(title = none)
+    xaxis = list(title = NA),
+    yaxis = list(title = NA)
     
   ) %>% 
   config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
 
 
-lag_ip_raw = exogeneisation_residus(df_ip_raw$IP, "ct")
-fUnitRoots::adfTest(df_ip_raw$IP, lag = lag_ip_raw, type ="ct") # p value = 0.33 -> we cannot reject UR
+lag_ip_raw = exogeneisation_residus(df_ip_raw$IP, "c")
+fUnitRoots::adfTest(df_ip_raw$IP, lag = lag_ip_raw, type ="c") # p value = 0.33 -> we cannot reject UR
 
-t = kpss.test(df_HOUST$HOUST, null = c("Level"))
+kpss.test(df_HOUST$HOUST, null = c("Level"))
 
 # differenciated
 plot_ly(data = df_ip) %>% add_lines(x = ~date, y = ~value) %>% 
   layout(
     font = list(size = 24),
-    xaxis = list(title = none),
-    yaxis = list(title = none)
+    xaxis = list(title = NA),
+    yaxis = list(title = NA)
     
   ) %>% 
   config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
 
 lag_ip = exogeneisation_residus(df_ip$value, "nc")
 fUnitRoots::adfTest(df_ip$value, lag = lag_ip, type ="nc") # smaller than 0.01 -> stationnary
+
+
+### ------- Focus on VIX -----------
+lag_vix = exogeneisation_residus(training_data$vix,"c")
+fUnitRoots::adfTest(training_data$vix, lag = lag_vix, type = "c") #p_value lower than 0.01 -> vix series is stationary
+
+# quickly : all the other assets
+stationnarity_adf <- function(time_series){
+  lag = exogeneisation_residus(time_series,"c")
+  test = fUnitRoots::adfTest(training_data$vix, lag = lag, type = "c")
+  
+  return(test)
+}
+
+df_spx$value %>%stationnarity_adf()
+
+df_ndx$value %>% stationnarity_adf()
+
+df_vrp$value %>% stationnarity_adf()
+
+df_Rvol22$value %>% stationnarity_adf()
+
+df_nai_partial = alfred::get_alfred_series(
+  series_id = "CFNAI",
+  series_name = "value",
+  observation_start = "1959-01-01",
+  realtime_start = final_date,
+  realtime_end = final_date,
+  api_key = "4f77313cfd688a6d4d70ccf8e650f038"
+) %>% as_tibble() %>% select(c("date", "value"))
+
+df_nai_partial$value %>% stationnarity_adf()
+
+df_nfci_partial = alfred::get_alfred_series(
+  series_id = "NFCI",
+  series_name = "value",
+  observation_start = "1959-01-01",
+  realtime_start = final_date,
+  realtime_end = final_date,
+  api_key = "4f77313cfd688a6d4d70ccf8e650f038"
+) %>% as_tibble() %>% select(c("value", "date"))
+
+df_nfci_partial$value %>% stationnarity_adf()
