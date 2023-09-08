@@ -21,9 +21,9 @@ h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases 
 n_forecasts = 250 #number of days for the test set
 
 date_begin_training = ymd("1991-01-05") # first day of availability of S&P, (NDX is available later) #ymd("1971-01-05")
-date_end_training = ymd("2014-01-01")
+date_end_training = ymd("2016-01-01")
 
-cum_evaluation = TRUE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
+cum_evaluation = FALSE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
 
 # ----- 0.Tools : loss function ------
 qlike <- function(h, sigma_square) {
@@ -127,6 +127,8 @@ for(date_index in 1:n_dates){
 
 if(cum_evaluation==TRUE){
   real_volatility_array = cumsum_on_forecast_array(real_volatility_array, h_list)
+}else{
+  real_volatility_array <- real_volatility_array[,h_list]
 }
 
 
