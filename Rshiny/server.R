@@ -37,8 +37,10 @@ all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
 no_quota_days = all_days[!(all_days %in% quota_days)]
 
 # font
+dispay_modebar = FALSE
+
 t <- list(
-  size = 14 #,
+  size = 12 #,
   #color = "blue"
   )
 
@@ -229,7 +231,7 @@ function(input, output, session) {
       main_plot <- subplot(plot_list, nrows = length(input$models),shareX = TRUE)
       
       main_plot <- main_plot %>% layout(title = "Volatility forecast from 1 day to 3 months ahead, with different models",
-                                        xaxis = list(title = none,
+                                        xaxis = list(title = NA,
                                           rangebreaks = list(list(bounds = list("sat","mon")),
                                                              list(values = as.character(no_quota_days))
                                           )))
@@ -296,13 +298,13 @@ function(input, output, session) {
       main_plot = main_plot %>%
         layout(
           title = "Volatility point forecast from 1 day to 3 months ahead, with different models",
-          xaxis = list(title = none,
+          xaxis = list(title = NA,
                        type = "date",
                        domain = df_filtered()$date,
                        rangebreaks = list(list(bounds = list("sat","mon")),
                                           list(values = as.character(no_quota_days))
                        )),
-          yaxis = list(title = none)
+          yaxis = list(title = NA)
         )
       
       
@@ -310,7 +312,8 @@ function(input, output, session) {
     
     main_plot = main_plot  %>% 
       layout(font = t) %>% 
-      config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
+      config(toImageButtonOptions = list(format = "png", width = 750, height = 500), 
+             displayModeBar = dispay_modebar)
     
     main_plot
   })
@@ -353,7 +356,9 @@ function(input, output, session) {
                       yaxis2 = ay_tau,
                       yaxis = list(title = variables[1]),
                       xaxis = list(range = list(ymd("2001-01-01"), today()),
-                                   title = none))
+                                   title = NA)) %>% 
+      config(toImageButtonOptions = list(format = "png", width = 750, height = 500), 
+             displayModeBar = dispay_modebar)
     
     
     if(length(variables)==2){
@@ -368,7 +373,8 @@ function(input, output, session) {
       
       p <- p %>% layout(yaxis = list(title = paste0(variables[1]," and ", variables[2])),
                         font = t) %>% 
-        config(toImageButtonOptions = list(format = "png", width = 750, height = 500))
+        config(toImageButtonOptions = list(format = "png", width = 750, height = 500), 
+               displayModeBar = dispay_modebar)
       
     }
     
@@ -391,6 +397,8 @@ function(input, output, session) {
         xaxis = list(xmin = ymd("1990-01-01")),
         yaxis = list(title = "Close value")
       )
+    
+    p <- p %>% config(displayModeBar = dispay_modebar)
     p
   })
   

@@ -85,7 +85,7 @@ fluidPage(
   #### PANEL VALIDATION
   h1("Models evaluation"),
   
-  numericInput("index_data_error_array", "Change all the parameters below : ", value = 1, min = 1, max = length(list.files("../data_error_array"))),
+  numericInput("index_data_error_array", "Select another table number : ", value = 1, min = 1, max = length(list.files("../data_error_array"))),
   
   tags$style("
     .parameter-list {
