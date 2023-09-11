@@ -51,11 +51,11 @@ function(input, output, session) {
   five_min_data <- reactive({
     if(input$main_index == "spx") {
       
-      five_min_data <-read_excel("../data_eikon/spx_29_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+      five_min_data <-read_excel("../data_eikon/spx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
       
     } else if(input$main_index == "ndx"){
     
-      five_min_data <- read_excel("../data_eikon/ndx_31_08_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+      five_min_data <- read_excel("../data_eikon/ndx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
     }
     return(five_min_data)
   })
@@ -64,7 +64,7 @@ function(input, output, session) {
   
 
   quantile_array <- reactive({
-    readRDS(paste0("../data_daily_forecast/",input$main_index,"/quantile_array.rds"))
+    readRDS(paste0("../data_daily_forecast/",input$main_index,"/quantile_array_",input$ic_level,".rds"))
   })
 
   df_training_data = reactive({

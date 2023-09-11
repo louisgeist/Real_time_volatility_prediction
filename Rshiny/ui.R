@@ -60,7 +60,14 @@ fluidPage(
         em("'GM' stands for GARCH-MIDAS."),
         em("The name after 'GM' are the explanatory variables."),
         
+        wellPanel(
         checkboxInput("bool_ic", "Confidence interval activation", value =  FALSE, width = "4000px"),
+        
+
+        radioButtons("ic_level", "Level of the confidence interval :", 
+                           choices = c("0.5","0.9"),
+                           selected = c("0.9"))
+        ),
         
         checkboxInput("bool_mult_plot", "Multiple plot view", value =  FALSE, width = "4000px")
         ),
