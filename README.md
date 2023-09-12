@@ -5,12 +5,21 @@ Internship at KIT
 
 ```
 Real_time_volatility_prediction
+├── Report&Beamer/
+    ├── 
+    ├── 
+
+├── data_eikon/
+└── eikon_data_preprocessing.R
 
 ├── data_import_tools.R
 ├── data_import.R
 ├── estimation.R
 ├── forecast.R
-├── daily_routine.R
+├── forecast_boosted.R
+├── daily_routine.R & daily_routine_v2.R
+├── daily_routine_launcher.R
+└── data_daily_forest/
 
 ├── .github/worflows
     └── produce_data_plot.uml
@@ -20,14 +29,15 @@ Real_time_volatility_prediction
     ...
     └── [today]_training_data.csv
 
-├── Rshiny
-    ├── server.R
-    └── ui.R
-
 ├── validation.R
 ├── qlike.error_analysis.R
+└── data_error_array/
 
 ├── descriptive_statistics.R
 ├── qlike.R
 ├── realized_library.csv #to be moved
+
+├── Rshiny
+    ├── server.R
+    └── ui.R
 ```
