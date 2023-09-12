@@ -37,7 +37,7 @@ all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
 no_quota_days = all_days[!(all_days %in% quota_days)]
 
 # font
-dispay_modebar = FALSE
+dispay_modebar = TRUE
 
 t <- list(
   size = 12 #,

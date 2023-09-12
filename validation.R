@@ -6,6 +6,7 @@ library(tidyr)
 library(zoo)
 library(tseries)
 library(readr)
+
 library(alfred)
 library(mfGARCH)
 library(rugarch)
@@ -18,12 +19,12 @@ main_index = "spx" # WATCH OUT : at the moment, ndx cannot be used, because we d
 GM_models_list = c("GM_dhoust","GM_ip","GM_nai","GM_nfci","GM_Rvol22", "GM_vix","GM_vrp","GM_vix_dhoust", "GM_vix_ip", "GM_vix_nai", "GM_vix_nfci") # remark : even if you remove models here, they will still be estimated (but not use of forecasts)
 
 h_list = c(1, 2, 5, 10, 22, 44, 66) # NB : adding prediction horizons increases the following calculations only slightly
-n_forecasts = 4000 #number of days for the test set
+n_forecasts = 250 #number of days for the test set
 
 date_begin_training = ymd("1991-01-05") # first day of availability of S&P, (NDX is available later) #ymd("1971-01-05")
-date_end_training = ymd("2000-01-01")
+date_end_training = ymd("2010-01-01")
 
-cum_evaluation = FALSE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
+cum_evaluation = TRUE # if TRUE, QLIKE on the cumulative forecasts, if FALSE, QLIKE on k-step forecasts
 
 # ----- 0.Tools : loss function ------
 qlike <- function(h, sigma_square) {
