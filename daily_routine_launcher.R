@@ -1,4 +1,5 @@
 library(lubridate)
+library(tidyr)
 source("./forecast.R")
 
 origin_date = today() - days(1)
@@ -11,4 +12,3 @@ if(t == today()-days(1)){
   main_index = "ndx"
   source("./daily_routine_v2.R")
 }
-  
