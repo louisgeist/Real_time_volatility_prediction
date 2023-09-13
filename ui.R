@@ -5,7 +5,7 @@ library(shiny)
 library(plotly)
 library(lubridate)
 
-source("../forecast.R")
+source("./forecast.R")
 quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
 quota_days = quota_days[quota_days < today()]
 all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
@@ -92,7 +92,7 @@ fluidPage(
   #### PANEL VALIDATION
   h1("Models evaluation"),
   
-  numericInput("index_data_error_array", "Select another table number : ", value = 1, min = 1, max = length(list.files("../data_error_array"))),
+  numericInput("index_data_error_array", "Select another table number : ", value = 1, min = 1, max = length(list.files("./data_error_array"))),
   
   tags$style("
     .parameter-list {

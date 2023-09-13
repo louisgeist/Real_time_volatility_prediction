@@ -27,9 +27,9 @@ list_models = c(
   "GARCH11"
 )
 
-source("../qlike.error_analysis.R")
-source("../eikon_data_preprocessing.R")
-source("../forecast.R") # to import the function seq_quotation_date
+source("./qlike.error_analysis.R")
+source("./eikon_data_preprocessing.R")
+source("./forecast.R") # to import the function seq_quotation_date
 
 quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
 quota_days = quota_days[quota_days < today()]
@@ -51,11 +51,11 @@ function(input, output, session) {
   five_min_data <- reactive({
     if(input$main_index == "spx") {
       
-      five_min_data <-read_excel("../data_eikon/spx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+      five_min_data <-read_excel("./data_eikon/spx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
       
     } else if(input$main_index == "ndx"){
     
-      five_min_data <- read_excel("../data_eikon/ndx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
+      five_min_data <- read_excel("./data_eikon/ndx_10_09_23.xlsx") %>% dplyr::rename("date" = "Local Date")
     }
     return(five_min_data)
   })
@@ -64,11 +64,11 @@ function(input, output, session) {
   
 
   quantile_array <- reactive({
-    readRDS(paste0("../data_daily_forecast/",input$main_index,"/quantile_array_",input$ic_level,".rds"))
+    readRDS(paste0("./data_daily_forecast/",input$main_index,"/quantile_array_",input$ic_level,".rds"))
   })
 
   df_training_data = reactive({
-    path_training_data = paste0("../data_daily_forecast/",input$main_index,"/training_data.csv")
+    path_training_data = paste0("./data_daily_forecast/",input$main_index,"/training_data.csv")
     
     df = read.csv(file = path_training_data) %>% mutate(date = ymd(date))
     
@@ -76,11 +76,11 @@ function(input, output, session) {
   })
   
   GM_active_models = reactive({
-    readRDS(paste0("../data_daily_forecast/",input$main_index,"/",input$origin_date,"_GM_models.rds"))
+    readRDS(paste0("./data_daily_forecast/",input$main_index,"/",input$origin_date,"_GM_models.rds"))
   })
   
   df_forecasts = reactive({
-    x = readRDS(paste0("../data_daily_forecast/",input$main_index,"/",input$origin_date,"_forecast.RDS" ))
+    x = readRDS(paste0("./data_daily_forecast/",input$main_index,"/",input$origin_date,"_forecast.rds" ))
     
     forecast_array = x$forecast_array %>% drop() # "drop()" removes the dimension 1 of the array
     df = as.data.frame(forecast_array %>% t())
@@ -93,12 +93,12 @@ function(input, output, session) {
   })
   
   x_forecast = reactive({
-    x_f = readRDS(paste0("../data_daily_forecast/",input$main_index,"/",input$origin_date,"_forecast.RDS" ))
+    x_f = readRDS(paste0("./data_daily_forecast/",input$main_index,"/",input$origin_date,"_forecast.rds" ))
     return(x_f)
   })
   
   error_array = reactive({
-    x = readRDS(paste0("../data_error_array/error_array",input$index_data_error_array,".rds"))
+    x = readRDS(paste0("./data_error_array/error_array",input$index_data_error_array,".rds"))
     return(x)
   })
   

@@ -6,6 +6,7 @@ library(plyr)
 library(dplyr)
 library(readxl)
 library(lubridate)
+library(tidyr)
 
 # ----- Parameters -----
 main_index = "spx"
