@@ -6,9 +6,11 @@ library(plotly)
 library(lubridate)
 
 source("./forecast.R")
-quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
-quota_days = quota_days[quota_days < today()]
-all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
+td = today() # ymd("2023-09-15")
+
+quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(td)-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
+quota_days = quota_days[quota_days < td]
+all_days = seq(ymd("2023-05-01"),td-days(1), by = "days")
 no_quota_days = all_days[!(all_days %in% quota_days)]
 
 
@@ -36,7 +38,7 @@ fluidPage(
           "Last date of data :",
           value = quota_days[length(quota_days)], #default origin_date is last monday where we have prediction
           min = "2023-05-01",
-          max = today() - days(1),
+          max = td - days(1),
           format = "yyyy-mm-dd",
           datesdisabled = no_quota_days,
           weekstart = 1

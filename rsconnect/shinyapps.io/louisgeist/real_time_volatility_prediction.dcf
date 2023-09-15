@@ -5,6 +5,6 @@ account: louisgeist
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9852692
-bundleId: 7679806
+bundleId: 7689273
 url: https://louisgeist.shinyapps.io/real_time_volatility_prediction/
 version: 1

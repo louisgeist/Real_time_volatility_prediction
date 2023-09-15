@@ -31,9 +31,11 @@ source("./qlike.error_analysis.R")
 source("./eikon_data_preprocessing.R")
 source("./forecast.R") # to import the function seq_quotation_date
 
-quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(today())-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
-quota_days = quota_days[quota_days < today()]
-all_days = seq(ymd("2023-05-01"),today()-days(1), by = "days")
+td = today() # ymd("2023-09-15")
+
+quota_days = seq_quotation_date(ymd("2023-05-01"), as.double(td)-as.double(ymd("2023-05-01"))) # function implemented in forecast.R
+quota_days = quota_days[quota_days < td]
+all_days = seq(ymd("2023-05-01"),td-days(1), by = "days")
 no_quota_days = all_days[!(all_days %in% quota_days)]
 
 # font
@@ -355,7 +357,7 @@ function(input, output, session) {
     p <- p %>% layout(title = "Explanatory variable and its transformation",
                       yaxis2 = ay_tau,
                       yaxis = list(title = variables[1]),
-                      xaxis = list(range = list(ymd("2001-01-01"), today()),
+                      xaxis = list(range = list(ymd("2001-01-01"), td),
                                    title = NA)) %>% 
       config(toImageButtonOptions = list(format = "png", width = 750, height = 500), 
              displayModeBar = dispay_modebar)
