@@ -45,9 +45,9 @@ Real_time_volatility_prediction
 
 ├── descriptive_statistics.R
 ├── qlike.R
-├── realized_library.csv #to be moved
+├── realized_library.csv
 
-├── Rshiny
-    ├── server.R
-    └── ui.R
+
+├── server.R
+└── ui.R
 ```
