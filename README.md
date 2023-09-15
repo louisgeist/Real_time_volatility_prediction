@@ -1,6 +1,7 @@
 # Real_time_volatility_prediction
 Internship at KIT
 
+![DEMO](https://github.com/louisgeist/Real_time_volatility_prediction/blob/main/Report%26Beamer/app_presentation.gif)
 ## Structure of the repository
 
 ```
