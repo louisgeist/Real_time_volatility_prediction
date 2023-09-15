@@ -1,12 +1,13 @@
-source("../qlike.error_analysis.R")
-source("../forecast.R")
-source("../eikon_data_preprocessing.R")
+source("./qlike.error_analysis.R")
+source("./forecast.R")
+source("./eikon_data_preprocessing.R")
 
 library(plyr)
 library(dplyr)
 library(readxl)
 library(lubridate)
 library(tidyr)
+library(plotly)
 
 # ----- Parameters -----
 main_index = "spx"
@@ -17,9 +18,9 @@ h_list = 1:66
 h_list_ic <- 1:10
 
 if(main_index == "spx"){
-  path_data_eikon = "../data_eikon/spx_10_09_23.xlsx"
+  path_data_eikon = "./data_eikon/spx_10_09_23.xlsx"
 }else{
-  path_data_eikon = "../data_eikon/ndx_10_09_23.xlsx"
+  path_data_eikon = "./data_eikon/ndx_10_09_23.xlsx"
 }
 
 
@@ -45,7 +46,7 @@ for(i in seq_along(models)){
 # forecast data
 
 for(i_date in seq_along(list_origin_date)){
-  x = readRDS(paste0("../data_daily_forecast/",main_index,"/",list_origin_date[i_date],"_forecast.rds"))
+  x = readRDS(paste0("./data_daily_forecast/",main_index,"/",list_origin_date[i_date],"_forecast.rds"))
   
   forecast_array = x$forecast_array %>% drop()
   forecast_array = forecast_array[,h_list_ic]
@@ -70,20 +71,25 @@ get_quantiles <- function(vector){
 
 quantile_array <- aaply(sorted_ratio_array, c(1,2), .fun = get_quantiles)
 
-saveRDS(quantile_array, file = paste0("../data_daily_forecast/",main_index,"/quantile_array_",level,".rds"))
+saveRDS(quantile_array, file = paste0("./data_daily_forecast/",main_index,"/quantile_array_",level,".rds"))
 
 
 # ---- 4. Analysis of the results ----
 plot(sorted_ratio_array[1,1,])
-plot(sorted_ratio_array[1,10,])
+plot(sorted_ratio_array[1,10,], title = "test")
+lines()
+
+
+df_RV = df_RV %>% filter(date > list_origin_date[[1]])
+df_RV$index <- 1:(length(df_RV$RV))
+df_RV$RV <- df_RV$RV %>% sort()
 
 for(i in 1:10){
   df = data.frame(index = 1:60, ratio = sorted_ratio_array[6,i,])
-  p = plot_ly(df) %>% 
-    add_markers(x = ~index, y = ~ratio) %>% 
-    layout(title = paste0("sorted ratio array, for vix and at horizon ", i))
-  print(p)
+  plot(df$ratio, main = paste0("Horizon ",i))
+  
+  lines(x = df_RV$index, y = df_RV$RV * 4)
 }
 
-df = data.frame(index = 1:60, ratio = sorted_ratio_array[6,1,])
-plot_ly(df) %>% add_markers(x = ~index, y = ~ratio)
+
+
