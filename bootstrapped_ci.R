@@ -12,18 +12,6 @@ next_g_func <- function(alpha, beta, gamma, Z, g) {
   return((1 - alpha - gamma / 2 - beta) + (alpha + gamma * as.numeric(Z < 0)) *
            (Z ** 2) *g + beta * g)
 }
-x=get(GM_models_list[[6]])
-g = x$g[[length(x$g)]] # last value of g = fitted short-term component
-alpha = x$par["alpha"][[1]]
-beta = x$par["beta"][[1]]
-gamma = x$par["gamma"][[1]]
-K = x$K
-df_residuals<-x$df.fitted$residuals
-
-set.seed(42)
-Z = sample(df_residuals[K+1:length(df_residuals)], size=1, replace=TRUE) # one sampled residual
-g_1<-next_g_func(alpha, beta, gamma, Z, g)
-
 
 
 #' Get Bootstrap Prediction Intervals
@@ -32,7 +20,7 @@ g_1<-next_g_func(alpha, beta, gamma, Z, g)
 #' @param beta Parameter of model
 #' @param gamma Parameter of model
 #' @param g0 Last observation available
-#' @param h Timesteps to predict into the future
+#' @param h Timesteps to predict into the future 
 #' @param q_upper Upper quantile to predict
 #' @param q_lower Lower quantile to predict
 #' @param B Number of bootstrap samples
@@ -59,19 +47,19 @@ get_bootstrap_pi <- function(alpha, beta, gamma, g0, df_resids, n_forecasts, q_u
   return(quantiles)
 }
 
-
+## should it be n_forecasts or h? 
 
 
 # Test
-x=GM_vix
-df_residuals<-x$df.fitted$residuals
+x=GM_vix #get(GM_models_list[[6]])
 K = x$K
 g = x$g[[length(x$g)]] # last value of g = fitted short-term component
 alpha = x$par["alpha"][[1]]
 beta = x$par["beta"][[1]]
 gamma = x$par["gamma"][[1]]
+df_residuals<-x$df.fitted$residuals[(K+1):length(x$df.fitted$residuals)]
 set.seed(42)
-quantiles <- get_bootstrap_pi(alpha, beta, gamma, g0=g, df_resids=df_residuals[(K+1):length(df_residuals)], n_forecasts=3)
+quantiles <- get_bootstrap_pi(alpha, beta, gamma, g0=g, df_resids=df_residuals, n_forecasts=3)
 print(quantiles)
 
 
