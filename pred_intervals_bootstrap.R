@@ -56,9 +56,9 @@ get_bootstrap_pi<- function(model_index,
   #date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
   # origin dates for predictions
   
-  # compute of all the tau
-  list_tau_t = double(B)
-  list_tau_t.plus.1 = double(B)
+  # compute of all the tau: we need each tau 2 times, for the upper and the lower quantile
+  #list_tau_t = double(2)
+  #list_tau_t.plus.1 = double(2)
   
   if (length(df_long_term1)>2) {
     df_long_term1 <- df_long_term1 %>%
@@ -68,43 +68,32 @@ get_bootstrap_pi<- function(model_index,
   pi = rev(x$est.weighting) * x$par[["theta"]]
   
   if(is.null(df_long_term2)){
-    for (i in seq_along(date_list)) {
-      #not really fast with an adply (for n_forecats = 1000, from 45sec to 40sec)
       last_Z = df_long_term1 %>%
-        filter(date <= date_list[[i]]) %>%
+        filter(date <= data_last_date) %>%
         tail(K + 1)
       
-      list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi))
-      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi))
-    }
+      list_tau_t = rep(x=exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi)), times = 2)
+      list_tau_t.plus.1 = rep(x=exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi)), times = 2)
   }else{ # remark : the second long term variable is necessarly daily, because of mfGARCH implementation
-    for (i in seq_along(date_list)) {
       K.two = x$K.two
       pi.two = rev(x$est.weighting.two) * x$par[["theta.two"]]
       
       last_Z = df_long_term1 %>%
-        filter(date <= date_list[[i]]) %>%
+        filter(date <= data_last_date) %>%
         tail(K + 1)
       
       last_Z.two = df_long_term2 %>% 
-        filter(date <= date_list[[i]]) %>%
+        filter(date <= data_last_date) %>%
         tail(K.two + 1)
       
-      list_tau_t[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
-      list_tau_t.plus.1[[i]] = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two))
+      list_tau_t = rep(x = exp(x$par[["m"]] + sum((last_Z$value %>% head(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two)), times = 2)
+      list_tau_t.plus.1 = rep(x = exp(x$par[["m"]] + sum((last_Z$value %>% tail(K)) * pi) + sum((last_Z.two$value %>% head(K.two)) * pi.two)), times = 2)
       
-    }
   }
-  
   
   # compute of all the g: here we only compute g_{i+1}
   delta = alpha + gamma / 2 + beta
   
-  
-  
-  #df_epsilon_for_g_computation = df_epsilon %>%  filter(date >= date_list[[1]]) %>% head(n_forecasts) # on a les valeurs depuis le 31/12/2014, dernier jour du train set
-  
-  #list_epsilon = df_epsilon_for_g_computation[[main_index]]
   Z_bootstrap <- sample(df_residuals, size=B, replace=TRUE)
   
   g_bootstrap <- array(data = 0, dim = c(h_max, B))
@@ -122,29 +111,26 @@ get_bootstrap_pi<- function(model_index,
   
   # compute of the forecasts
   ## array creation
-  forecast_array <- array(0, dim = c(n_forecasts, h_max))
+  forecast_array <- array(0, dim = c(2, h_max))
   
-  date_list_plushdays = seq_quotation_date(date_list[[1]],n_forecasts + h_max) # to test in the loop if the forecast is in the same month/week as the origin
+  #date_list_plushdays = seq_quotation_date(date_list[[1]],n_forecasts + h_max) # to test in the loop if the forecast is in the same month/week as the origin
   
-  for (date in 1:n_forecasts) {
-    forecast_array[date, ] <- double(h_max)
-  }
+  #for (date in 1:n_forecasts) {  forecast_array[date, ] <- double(h_max)}
   
   ## add of tau values
-  for (date_index in seq_along(date_list)) {
-    forecast_array[date_index, ] <-
-      rep(list_tau_t.plus.1[[date_index]], h_max)
+  for (i in 1:2) {
+    forecast_array[i, ] <- rep(list_tau_t.plus.1[[i]], h_max)
     
     
     if(!is.null(df_long_term2) | length(df_long_term1) == 2){# tau is updated daily : nothing has to be done
       
       
     }else if(colnames(df_long_term1)[[3]] == "year_month"){
-      origin_month <- month(date_list[[date_index]])
+      origin_month <- month(data_last_date)
       
       for (h in 1:h_max) {
-        if (origin_month == month(date_list_plushdays[[date_index + h]])) {
-          forecast_array[date_index, h] <- list_tau_t[[date_index]]
+        if (origin_month == month(date_list_plushdays[1 + h])) {
+          forecast_array[i, h] <- list_tau_t[[i]]
         }
         else{
           break
@@ -154,10 +140,10 @@ get_bootstrap_pi<- function(model_index,
       
     } else if(colnames(df_long_term1)[[3]] == "year_week"){
       
-      origin_week <- week(date_list[[date_index]])
+      origin_week <- week(data_last_date)
       for (h in 1:h_max) {
-        if (origin_week == week(date_list_plushdays[[date_index + h]])) {
-          forecast_array[date_index, h] <- list_tau_t[[date_index]]
+        if (origin_week == week(date_list_plushdays[1 + h])) {
+          forecast_array[i, h] <- list_tau_t[[i]]
         }
         else{
           break
@@ -171,9 +157,9 @@ get_bootstrap_pi<- function(model_index,
   }
   
   ## forecast
-  for (date_index in seq_along(date_list)) {
-    forecast_array[date_index, ] <- # here we multiply tau with the bootstrap quantiles for g
-      forecast_array[date_index, ] * g_quantiles
+  for (i in 1:2) {
+    forecast_array[i, ] <- # here we multiply tau with the bootstrap quantiles for g
+      forecast_array[i, ] * g_quantiles[i,]
   }
   
   return(forecast_array)
