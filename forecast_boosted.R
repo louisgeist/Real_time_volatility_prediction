@@ -1,11 +1,11 @@
-# GARCH-MIDAS
-boosted_forecast = function(model_index,
-                            h_list,
-                            n_forecasts,
-                            df_epsilon,
+# function for forecasts of the GARCH-MIDAS model
+boosted_forecast = function(model_index, 
+                            h_list, # forecast horizon
+                            n_forecasts, # n_forecasts is only used for validation.R
+                            df_epsilon, # df_epsilon is the return data of either spx or ndx
                             df_long_term1,
                             df_long_term2 = NULL,
-                            data_last_date) {
+                            data_last_date) { #later, data_last_date will be =date_end_training
   x = get(GM_models_list[[model_index]])
   h_max = max(h_list)
   
@@ -19,7 +19,8 @@ boosted_forecast = function(model_index,
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
   
-  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # origin date for predictions
+  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
+  # origin dates for predictions
   
   # compute of all the tau
   list_tau_t = double(n_forecasts)
