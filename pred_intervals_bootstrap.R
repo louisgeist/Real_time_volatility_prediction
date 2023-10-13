@@ -1,6 +1,10 @@
 # estimate prediction intervals
 # with bootstrap procedure: estimate forecasts with random draws from previous residuals
 
+# in contrast to the function boosted_forecast, here we will not have the option to compute forecasts for 
+# several starting dates at once. Instead, we will use the third dimension of the forecast array for the 
+# bootstrap forecasts.
+
 # GARCH-MIDAS
 
 # test for GM_vix:  
@@ -10,12 +14,26 @@ df_residuals<-GM_vix$df.fitted$residuals
 df_long_term1<- df_vix
 data_last_date = date_end_training
 df_long_term2=NULL
-####
 
+test<-boosted_forecast(6,1:66,1,df_main_index,df_long_term1 = df_vix, data_last_date = date_end_training )
+
+####
+#' Get Bootstrap Prediction Intervals
+#'
+#' @param alpha Parameter of model
+#' @param beta Parameter of model
+#' @param gamma Parameter of model
+#' @param g0 Last observation available
+#' @param h Timesteps to predict into the future 
+#' @param q_upper Upper quantile to predict
+#' @param q_lower Lower quantile to predict
+#' @param B Number of bootstrap samples
+#'
+#' @return Vector of quantiles for prediction range n_forecasts
 # 1. h-step ahead forecasts
-boosted_forecast = function(model_index, 
+get_bootstrap_pi<- function(model_index, 
                             h_list, # forecast horizon
-                            n_forecasts, # n_forecasts is only used for validation.R
+                            B, # Number of bootstrap samples
                             df_epsilon, # df_epsilon is the return data of either spx or ndx
                             df_long_term1,
                             df_long_term2 = NULL,
@@ -28,17 +46,19 @@ boosted_forecast = function(model_index,
   gamma = x$par["gamma"][[1]]
   
   K = x$K
+  g = x$g[[length(x$g)]] # last value of g = fitted short-term component
+  df_residuals<-x$df.fitted$residuals[(K+1):length(x$df.fitted$residuals)]
   
   if (is.null(df_epsilon)) {
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
   
-  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
+  #date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
   # origin dates for predictions
   
   # compute of all the tau
-  list_tau_t = double(n_forecasts)
-  list_tau_t.plus.1 = double(n_forecasts)
+  list_tau_t = double(B)
+  list_tau_t.plus.1 = double(B)
   
   if (length(df_long_term1)>2) {
     df_long_term1 <- df_long_term1 %>%
@@ -82,25 +102,23 @@ boosted_forecast = function(model_index,
   
   
   
-  df_epsilon_for_g_computation = df_epsilon %>%  filter(date >= date_list[[1]]) %>% head(n_forecasts) # on a les valeurs depuis le 31/12/2014, dernier jour du train set
+  #df_epsilon_for_g_computation = df_epsilon %>%  filter(date >= date_list[[1]]) %>% head(n_forecasts) # on a les valeurs depuis le 31/12/2014, dernier jour du train set
   
-  list_epsilon = df_epsilon_for_g_computation[[main_index]]
+  #list_epsilon = df_epsilon_for_g_computation[[main_index]]
+  Z_bootstrap <- sample(df_residuals, size=B, replace=TRUE)
   
-  list_constant = rep(x = (1 - delta), times = n_forecasts)
+  g_bootstrap <- array(data = 0, dim = c(h_max, B))
+  
+  list_constant = rep(x = (1 - delta), times = B)
   
   list_g_i.plus.1 <-
-    list_constant + (alpha + gamma * as.numeric(list_epsilon < 0)) * list_epsilon **
-    2 / list_tau_t
+    list_constant + (alpha + gamma * as.numeric(Z_bootstrap < 0)) * (Z_bootstrap ** 2) *g + beta * g
   
+  for (i in 1:h_max) {
+    g_bootstrap[i,] <-(1 + (delta ^(i)) * (list_g_i.plus.1 - 1))
+  } 
   
-  list_g_i.plus.1[[1]] <- list_g_i.plus.1[[1]] + beta * x$g[[length(x$g)]] #initialsation
-  
-  if(n_forecasts > 1){
-    for (i in 2:n_forecasts) { # recursion
-      list_g_i.plus.1[[i]] <-
-        list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
-    } # shouldn't this use the original g values instead of g_plus_1 forecasts?
-  }
+  g_quantiles <- apply(g_bootstrap, MARGIN = 1, quantile, c(q_lower, q_upper))
   
   # compute of the forecasts
   ## array creation
@@ -154,8 +172,8 @@ boosted_forecast = function(model_index,
   
   ## forecast
   for (date_index in seq_along(date_list)) {
-    forecast_array[date_index, ] <- # here we multiply tau with g, and g is computed for all h based on g_{i+1}
-      forecast_array[date_index, ] * (1 + (delta ^(1:h_max)) * (list_g_i.plus.1[[date_index]] - 1))
+    forecast_array[date_index, ] <- # here we multiply tau with the bootstrap quantiles for g
+      forecast_array[date_index, ] * g_quantiles
   }
   
   return(forecast_array)
