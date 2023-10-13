@@ -1,4 +1,6 @@
-# function for forecasts of the GARCH-MIDAS model
+# functions for forecasts of the GARCH-MIDAS model: 1. h-step ahead and 2. cumulative forecasts
+
+# 1. h-step ahead forecasts
 boosted_forecast = function(model_index, 
                             h_list, # forecast horizon
                             n_forecasts, # n_forecasts is only used for validation.R
@@ -85,7 +87,7 @@ boosted_forecast = function(model_index,
     for (i in 2:n_forecasts) { # recursion
       list_g_i.plus.1[[i]] <-
         list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
-    }
+    } # shouldn't this use the original g values instead of g_plus_1 forecasts?
   }
   
   # compute of the forecasts
@@ -147,7 +149,7 @@ boosted_forecast = function(model_index,
   return(forecast_array)
 }
 
-
+# 2. cumulative forecasts
 cumsum_on_forecast_array <- function(forecast_array,h_list){
   for(date_index in seq_along(forecast_array[,1])){
     forecast_array[date_index,] <- forecast_array[date_index,] %>%  cumsum()
