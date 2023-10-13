@@ -25,7 +25,7 @@ next_g_func <- function(alpha, beta, gamma, Z, g) {
 #' @param q_lower Lower quantile to predict
 #' @param B Number of bootstrap samples
 #'
-#' @return Vector of quantiles for prediction range n_forecasts
+#' @return Vector of quantiles for prediction range
 get_bootstrap_pi <- function(alpha, beta, gamma, g0, df_resids, n_forecasts, q_upper = 0.95,
                              q_lower = 0.05, B = 1000){
   # Generate random draws
