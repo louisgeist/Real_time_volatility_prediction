@@ -1,5 +1,7 @@
 # ----- Forecast with a GARCH-MIDAS ------
 # forecast function rely on the "mfGARCH" package
+# !!! this file is not used, only use forecast_boosted.R
+# the only function needed in this file is seq_quotation_date
 library(timeDate)
 
 
