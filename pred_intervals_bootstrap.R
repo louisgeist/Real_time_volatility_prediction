@@ -12,14 +12,14 @@ data_last_date = date_end_training
 df_long_term2=NULL
 ####
 
-boosted_forecast = function(model_index,
-                            h_list,
-                            n_forecasts,
-                            df_epsilon,
+# 1. h-step ahead forecasts
+boosted_forecast = function(model_index, 
+                            h_list, # forecast horizon
+                            n_forecasts, # n_forecasts is only used for validation.R
+                            df_epsilon, # df_epsilon is the return data of either spx or ndx
                             df_long_term1,
                             df_long_term2 = NULL,
-                            data_last_date, #later, data_last_date will be = date_end_training
-                            df_residuals) {
+                            data_last_date) { #later, data_last_date will be =date_end_training
   x = get(GM_models_list[[model_index]])
   h_max = max(h_list)
   
@@ -33,7 +33,8 @@ boosted_forecast = function(model_index,
     stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
   }
   
-  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # origin date for predictions
+  date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
+  # origin dates for predictions
   
   # compute of all the tau
   list_tau_t = double(n_forecasts)
@@ -98,7 +99,7 @@ boosted_forecast = function(model_index,
     for (i in 2:n_forecasts) { # recursion
       list_g_i.plus.1[[i]] <-
         list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
-    }
+    } # shouldn't this use the original g values instead of g_plus_1 forecasts?
   }
   
   # compute of the forecasts
@@ -151,31 +152,6 @@ boosted_forecast = function(model_index,
     
   }
   
-  # compute of all the g
-  
-  delta = alpha + gamma / 2 + beta
-
-  df_epsilon_for_g_computation = df_epsilon %>%  filter(date >= date_list[[1]]) %>% head(n_forecasts) # on a les valeurs depuis le 31/12/2014, dernier jour du train set
-  
-  list_epsilon = df_epsilon_for_g_computation[[main_index]]
-  
-  list_constant = rep(x = (1 - delta), times = n_forecasts)
-  
-  list_g_i.plus.1 <-
-    list_constant + (alpha + gamma * as.numeric(list_epsilon < 0)) * list_epsilon **
-    2 / list_tau_t
-  
-  
-  list_g_i.plus.1[[1]] <- list_g_i.plus.1[[1]] + beta * x$g[[length(x$g)]] #initialsation
-  
-  if(n_forecasts > 1){
-    for (i in 2:n_forecasts) { # recursion
-      list_g_i.plus.1[[i]] <-
-        list_g_i.plus.1[[i]] + beta * list_g_i.plus.1[[i - 1]]
-    }
-  }
-  
-  
   ## forecast
   for (date_index in seq_along(date_list)) {
     forecast_array[date_index, ] <-
@@ -185,7 +161,7 @@ boosted_forecast = function(model_index,
   return(forecast_array)
 }
 
-
+# 2. cumulative forecasts
 cumsum_on_forecast_array <- function(forecast_array,h_list){
   for(date_index in seq_along(forecast_array[,1])){
     forecast_array[date_index,] <- forecast_array[date_index,] %>%  cumsum()
@@ -193,4 +169,3 @@ cumsum_on_forecast_array <- function(forecast_array,h_list){
   
   return(forecast_array[,h_list])
 }
-
