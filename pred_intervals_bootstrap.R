@@ -77,7 +77,7 @@ boosted_forecast = function(model_index,
   }
   
   
-  # compute of all the g
+  # compute of all the g: here we only compute g_{i+1}
   delta = alpha + gamma / 2 + beta
   
   

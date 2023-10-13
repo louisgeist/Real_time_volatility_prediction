@@ -65,7 +65,7 @@ boosted_forecast = function(model_index,
   }
   
   
-  # compute of all the g
+  # compute of all the g: here we only compute g_{i+1}
   delta = alpha + gamma / 2 + beta
   
   
@@ -142,7 +142,7 @@ boosted_forecast = function(model_index,
   
   ## forecast
   for (date_index in seq_along(date_list)) {
-    forecast_array[date_index, ] <-
+    forecast_array[date_index, ] <- # here we multiply tau with g, and g is computed for all h based on g_{i+1}
       forecast_array[date_index, ] * (1 + (delta ^(1:h_max)) * (list_g_i.plus.1[[date_index]] - 1))
   }
   
