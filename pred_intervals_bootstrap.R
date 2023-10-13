@@ -18,7 +18,7 @@ boosted_forecast = function(model_index,
                             df_epsilon,
                             df_long_term1,
                             df_long_term2 = NULL,
-                            data_last_date,
+                            data_last_date, #later, data_last_date will be = date_end_training
                             df_residuals) {
   x = get(GM_models_list[[model_index]])
   h_max = max(h_list)
