@@ -34,7 +34,6 @@ test<-boosted_forecast(6,1:66,1,df_main_index,df_long_term1 = df_vix, data_last_
 get_bootstrap_pi<- function(model_index, 
                             h_list, # forecast horizon
                             B, # Number of bootstrap samples
-                            df_epsilon, # df_epsilon is the return data of either spx or ndx
                             df_long_term1,
                             df_long_term2 = NULL,
                             data_last_date) { #later, data_last_date will be =date_end_training
@@ -49,9 +48,6 @@ get_bootstrap_pi<- function(model_index,
   g = x$g[[length(x$g)]] # last value of g = fitted short-term component
   df_residuals<-x$df.fitted$residuals[(K+1):length(x$df.fitted$residuals)]
   
-  if (is.null(df_epsilon)) {
-    stop("Please enter the df_epsilon dataframe (that is, the df_spx's last update)")
-  }
   
   #date_list <- seq_quotation_date(data_last_date, n_forecasts - 1) # vector of size n_forecasts containing
   # origin dates for predictions
@@ -167,9 +163,19 @@ get_bootstrap_pi<- function(model_index,
 
 # 2. cumulative forecasts
 cumsum_on_forecast_array <- function(forecast_array,h_list){
-  for(date_index in seq_along(forecast_array[,1])){
-    forecast_array[date_index,] <- forecast_array[date_index,] %>%  cumsum()
+  for(i in seq_along(forecast_array[,1])){
+    forecast_array[i,] <- forecast_array[i,] %>%  cumsum()
   }
   
   return(forecast_array[,h_list])
 }
+
+
+test<- get_bootstrap_pi(model_index= 6, 
+                        h_list= 1:66, # forecast horizon
+                        B=1000, # Number of bootstrap samples
+                        df_long_term1=df_vix,
+                        df_long_term2 = NULL,
+                        data_last_date= date_end_training)
+####
+  
