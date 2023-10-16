@@ -171,9 +171,9 @@ cumsum_on_forecast_array <- function(forecast_array,h_list){
 }
 
 
-test<- get_bootstrap_pi(model_index= 6, 
+test_pi<- get_bootstrap_pi(model_index= 6, 
                         h_list= 1:66, # forecast horizon
-                        B=1000, # Number of bootstrap samples
+                        B=5000, # Number of bootstrap samples
                         df_long_term1=df_vix,
                         df_long_term2 = NULL,
                         data_last_date= date_end_training)
