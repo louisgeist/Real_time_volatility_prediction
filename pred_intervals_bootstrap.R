@@ -15,7 +15,7 @@ df_long_term1<- df_vix
 data_last_date = date_end_training
 df_long_term2=NULL
 
-test<-boosted_forecast(6,1:66,1,df_main_index,df_long_term1 = df_vix, data_last_date = date_end_training )
+test_boosted<-boosted_forecast(6,1:66,1,df_main_index,df_long_term1 = df_vix, data_last_date = date_end_training )
 
 ####
 #' Get Bootstrap Prediction Intervals
