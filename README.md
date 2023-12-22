@@ -6,7 +6,7 @@ The subject of the study was the real-time modeling and prediction of volatility
 
 My internship report is available in the folder ``Report&Beamer/``.
 
-The following *gif* shows the Rshiny app, available [here](https://louisgeist.shinyapps.io/real_time_volatility_prediction/).
+The following *gif* shows the Rshiny app.
 
 ![DEMO](https://github.com/louisgeist/Real_time_volatility_prediction/blob/main/Report%26Beamer/app_presentation.gif)
 
